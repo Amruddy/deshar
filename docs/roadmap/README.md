@@ -18,10 +18,10 @@
 ## 1. Текущий статус
 
 - Текущий большой блок: `Release 1.0`.
-- Последний завершенный кодовый stage: `Auth Stage 5. Auth Smoke And Hardening`.
-- Активный stage: `Final Design System And UX Polish`.
-- Активный план: `docs/work-plans/active/31-final-design-system-ux-polish-plan.md`.
-- Планируемая ветка текущего кодового stage: `feat/final-design-system-ux-polish`.
+- Последний завершенный кодовый stage: `Final Design System And UX Polish`.
+- Активный stage: `New Visual Design`.
+- Активный план: `docs/work-plans/active/32-new-visual-design-plan.md`.
+- Планируемая ветка текущего кодового stage: `feat/new-visual-design`.
 - Предыдущий блок: `MPMF 1.0`, завершен и смержен в `main`.
 - Запись завершения MPMF 1.0: `docs/release/mpmf-1-release-readiness.md`.
 
@@ -84,7 +84,7 @@ Roadmap:
 
 ## 5. Активный подплан
 
-### Final Design System And UX Polish
+### New Visual Design
 
 Roadmap:
 
@@ -92,11 +92,11 @@ Roadmap:
 
 Активный stage:
 
-`Final Design System And UX Polish`
+`New Visual Design`
 
 Активный work plan:
 
-`docs/work-plans/active/31-final-design-system-ux-polish-plan.md`
+`docs/work-plans/active/32-new-visual-design-plan.md`
 
 После него:
 
@@ -109,5 +109,6 @@ Roadmap:
 3. `Auth Stage 4. Admin Invitations`.
 4. `Auth Stage 5. Auth Smoke And Hardening`.
 5. `Final Design System And UX Polish`.
-6. `Production Hardening`.
-7. `Release Candidate Smoke And Notes`.
+6. `New Visual Design`.
+7. `Production Hardening`.
+8. `Release Candidate Smoke And Notes`.

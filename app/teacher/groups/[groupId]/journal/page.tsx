@@ -129,6 +129,7 @@ export default async function TeacherGroupJournalPage({ params, searchParams }: 
                                 <td
                                   className={lesson.isWeekStart ? "week-start" : undefined}
                                   data-attendance={cell.attendanceTone}
+                                  data-label={`${lesson.weekday} ${lesson.day}, ${lesson.timeRange}`}
                                   data-future={cell.isFuture ? "true" : undefined}
                                   key={cell.id}
                                 >

@@ -2449,6 +2449,16 @@ td a,
   color: #92400e;
 }
 
+.student-attendance-empty {
+  min-height: 160px;
+  place-content: center;
+}
+
+.student-attendance-empty h2 {
+  color: var(--primary-strong);
+  font-size: 20px;
+}
+
 .student-learning-grid {
   align-items: stretch;
   display: grid;
@@ -3161,5 +3171,863 @@ td a,
 
   .mobile-nav .app-nav-link {
     min-width: 102px;
+  }
+}
+
+/* Release 1.0 New Visual Design stage */
+:root {
+  --background: #eef3ed;
+  --shell: #e8f1e8;
+  --surface: #fffdf8;
+  --surface-muted: #f7f8f3;
+  --surface-strong: #e4eee7;
+  --border: #d9e0d7;
+  --border-strong: #c8d3ca;
+  --text: #17231f;
+  --muted: #65736d;
+  --primary: #1f4a3d;
+  --primary-strong: #263b35;
+  --primary-soft: #e8f1e8;
+  --accent: #2e5572;
+  --accent-soft: #eef4fb;
+  --warning: #72551c;
+  --warning-soft: #fff3d1;
+  --danger: #7a4539;
+  --danger-soft: #f5e8e3;
+  --shadow: 0 14px 40px rgb(31 74 61 / 8%);
+  --shadow-raised: 0 24px 70px rgb(31 74 61 / 12%);
+  --radius: 8px;
+  --control-radius: 8px;
+  --sidebar-width: 272px;
+  --content-max: 1280px;
+  --gap: 18px;
+}
+
+body {
+  background: var(--background);
+}
+
+.app-shell {
+  align-items: start;
+  gap: 24px;
+  padding: 24px;
+}
+
+.sidebar {
+  top: 24px;
+  height: calc(100vh - 48px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgb(255 253 248 / 88%);
+  box-shadow: var(--shadow);
+  padding: 22px;
+}
+
+.brand {
+  min-height: 48px;
+  color: var(--primary);
+  font-size: 19px;
+}
+
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  border-color: var(--primary);
+  border-radius: var(--control-radius);
+  background: var(--primary);
+}
+
+.app-nav-link {
+  min-height: 44px;
+  border-radius: var(--control-radius);
+  color: #40544c;
+  font-size: 14px;
+  font-weight: 720;
+  padding: 7px 10px;
+}
+
+.app-nav-link:hover,
+.app-nav-link[data-active="true"] {
+  border-color: var(--border);
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.app-nav-link[data-active="true"] {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.app-nav-icon {
+  border-radius: var(--control-radius);
+}
+
+.workspace {
+  display: grid;
+  gap: 18px;
+}
+
+.workspace-topbar {
+  top: 24px;
+  min-height: 68px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgb(255 253 248 / 90%);
+  box-shadow: var(--shadow);
+  padding: 0 22px;
+}
+
+.workspace-topbar strong {
+  font-size: 17px;
+}
+
+.main {
+  width: min(var(--content-max), 100%);
+  padding: 0 0 64px;
+}
+
+.page-heading {
+  margin-bottom: 18px;
+}
+
+.page-heading h1 {
+  color: var(--text);
+  font-size: 34px;
+  letter-spacing: 0;
+}
+
+.panel,
+.journal-sheet {
+  border-color: var(--border);
+  background: rgb(255 253 248 / 92%);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+
+.panel h2,
+.panel h3,
+.journal-sheet h2 {
+  color: var(--text);
+}
+
+.metric-card {
+  min-height: 128px;
+}
+
+.metric-card strong {
+  color: var(--primary-strong);
+  font-size: 34px;
+}
+
+.info-row {
+  border-top-color: var(--border);
+}
+
+.button,
+.danger-button,
+.secondary-button {
+  min-height: 44px;
+  border-radius: var(--control-radius);
+  padding: 0 16px;
+  font-weight: 740;
+}
+
+.compact-button,
+.table-wrap .button,
+.table-wrap .secondary-button {
+  min-height: 36px;
+  padding: 0 12px;
+}
+
+input,
+select,
+textarea {
+  min-height: 44px;
+  border-color: var(--border-strong);
+  border-radius: var(--control-radius);
+  background: #ffffff;
+}
+
+.table-wrap,
+.journal-table-wrap {
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+th,
+td {
+  border-bottom-color: var(--border);
+}
+
+th {
+  background: var(--surface-muted);
+}
+
+.journal-sheet {
+  gap: 18px;
+}
+
+.journal-table-wrap {
+  overflow-x: visible;
+  overscroll-behavior-x: auto;
+  scrollbar-gutter: auto;
+}
+
+.journal-table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.journal-table th,
+.journal-table td {
+  padding: 8px 7px;
+}
+
+.journal-student-head,
+.journal-student-name {
+  position: static;
+  width: 188px;
+  min-width: 0;
+  max-width: none;
+}
+
+.journal-student-head {
+  padding: 0 10px !important;
+}
+
+.journal-student-name {
+  padding: 10px !important;
+  font-size: 14px;
+}
+
+.journal-table thead th {
+  height: 50px;
+}
+
+.journal-table thead th strong {
+  font-size: 15px;
+}
+
+.journal-cell {
+  min-height: 58px;
+}
+
+.journal-cell-input {
+  min-width: 0;
+  min-height: 38px;
+  border: 1px solid var(--border);
+  border-radius: var(--control-radius);
+  background: #ffffff;
+  padding: 0 6px;
+  color: var(--primary-strong);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.journal-cell-input:focus {
+  outline: 3px solid rgb(31 74 61 / 18%);
+  outline-offset: 0;
+}
+
+.journal-cell-meta {
+  padding: 5px 3px 0;
+}
+
+.journal-cell-meta span {
+  background: var(--surface-muted);
+}
+
+.journal-meta {
+  align-items: center;
+  border-top-color: var(--border);
+}
+
+.journal-legend {
+  gap: 7px;
+}
+
+.journal-legend span {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  padding: 7px 10px;
+  color: var(--muted);
+  font-weight: 740;
+}
+
+.journal-table td[data-attendance="ok"] {
+  background: #e8f3eb;
+}
+
+.journal-table td[data-attendance="warning"] {
+  background: var(--warning-soft);
+}
+
+.journal-table td[data-attendance="danger"] {
+  background: var(--danger-soft);
+}
+
+.teacher-journal-shortcut {
+  align-items: center;
+  background: var(--primary-strong);
+  color: #ffffff;
+}
+
+.teacher-journal-shortcut h2,
+.teacher-journal-shortcut p {
+  color: inherit;
+}
+
+.teacher-journal-shortcut p {
+  color: #d7e3dd;
+}
+
+@media (max-width: 1024px) {
+  .app-shell {
+    display: block;
+    padding: 0;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .workspace {
+    display: flex;
+  }
+
+  .workspace-topbar {
+    top: 0;
+    border-top: 0;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+    padding: 0 16px;
+  }
+
+  .main {
+    width: min(var(--content-max), calc(100% - 32px));
+    padding: 24px 0 124px;
+  }
+
+  .mobile-nav {
+    border-radius: var(--radius);
+  }
+}
+
+@media (max-width: 760px) {
+  .page-heading h1 {
+    font-size: 28px;
+  }
+
+  .panel,
+  .journal-sheet {
+    padding: 16px;
+  }
+
+  .journal-table-wrap {
+    width: 100%;
+    margin-right: 0;
+    margin-left: 0;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .journal-table,
+  .journal-table thead,
+  .journal-table tbody,
+  .journal-table tr,
+  .journal-table th,
+  .journal-table td {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .journal-table thead {
+    display: none;
+  }
+
+  .journal-table tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  .journal-table tr {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+
+  .journal-table tbody tr:nth-child(even) .journal-student-name,
+  .journal-table tbody tr:nth-child(even) td {
+    background: var(--surface);
+  }
+
+  .journal-student-name {
+    width: 100%;
+    padding: 12px 14px !important;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-muted) !important;
+  }
+
+  .journal-table td {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(72px, 96px);
+    gap: 10px;
+    align-items: center;
+    border-right: 0;
+    padding: 10px 12px;
+    text-align: left;
+  }
+
+  .journal-table td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+
+  .journal-table .week-start {
+    border-left: 0;
+  }
+
+  .journal-cell {
+    min-height: auto;
+  }
+
+  .journal-cell-input {
+    min-height: 42px;
+  }
+
+  .journal-cell-meta {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    padding: 2px 0 0;
+  }
+
+  .journal-meta {
+    display: grid;
+    gap: 10px;
+  }
+}
+
+/* Design map parity pass */
+:root {
+  --radius: 28px;
+  --control-radius: 16px;
+  --shadow: 0 24px 70px rgb(31 74 61 / 12%);
+  --shadow-raised: 0 30px 90px rgb(31 74 61 / 16%);
+}
+
+.app-shell {
+  background: var(--background);
+}
+
+.sidebar,
+.workspace-topbar,
+.panel,
+.journal-sheet,
+.page-create-overlay,
+.payment-filter-popover {
+  border-radius: var(--radius);
+}
+
+.sidebar {
+  background: rgb(255 253 248 / 94%);
+  padding: 28px;
+}
+
+.brand {
+  display: grid;
+  align-content: start;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+}
+
+.brand-text {
+  align-self: center;
+  font-size: 24px;
+}
+
+.side-nav {
+  gap: 8px;
+}
+
+.app-nav-link {
+  min-height: 48px;
+  border-radius: 16px;
+  padding: 9px 12px;
+}
+
+.app-nav-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 12px;
+}
+
+.sidebar-card {
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.workspace-topbar {
+  min-height: 76px;
+  background: rgb(255 253 248 / 94%);
+  padding: 0 28px;
+}
+
+.page-heading {
+  margin-bottom: 24px;
+}
+
+.page-heading h1 {
+  font-size: 42px;
+  line-height: 1.05;
+}
+
+.panel,
+.journal-sheet {
+  background: rgb(255 253 248 / 92%);
+  padding: 28px;
+}
+
+.section-heading {
+  margin-bottom: 22px;
+}
+
+.metric-card {
+  min-height: 138px;
+}
+
+.metric-card span,
+.table-detail span,
+.sidebar-label,
+.topbar-kicker,
+.status {
+  letter-spacing: 0;
+}
+
+.metric-card strong {
+  font-size: 38px;
+}
+
+.button,
+.danger-button,
+.secondary-button {
+  border-radius: 16px;
+  min-height: 44px;
+  padding: 0 18px;
+}
+
+.compact-button,
+.table-wrap .button,
+.table-wrap .secondary-button {
+  min-height: 38px;
+  border-radius: 14px;
+  padding: 0 12px;
+}
+
+input,
+select,
+textarea {
+  border-radius: 15px;
+  background: #ffffff;
+}
+
+.status,
+.payment-status-pill {
+  border-radius: 999px;
+  padding: 8px 12px;
+}
+
+.table-wrap,
+.journal-table-wrap,
+.panel > .table-wrap {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.panel > .table-wrap {
+  margin-top: 0;
+}
+
+table,
+.data-table {
+  min-width: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th,
+td {
+  padding: 15px 16px;
+}
+
+.data-table th:first-child,
+.data-table td:first-child {
+  position: static;
+  box-shadow: none;
+}
+
+.data-table th:first-child {
+  background: var(--surface-muted);
+}
+
+.data-table tbody tr:hover,
+.data-table tbody tr:hover td {
+  background: #fbfcf8;
+}
+
+.table-detail {
+  gap: 4px;
+}
+
+.table-detail strong,
+td a,
+.table-wrap th a {
+  color: var(--primary);
+  font-weight: 760;
+}
+
+.empty-state,
+.system-state {
+  border-radius: 22px;
+}
+
+.journal-table-wrap,
+.panel > .journal-table-wrap {
+  border-radius: 22px;
+}
+
+.journal-table th,
+.journal-table td {
+  padding: 8px 7px;
+}
+
+.journal-cell-input {
+  border-radius: 12px;
+}
+
+@media (max-width: 1024px) {
+  .workspace-topbar {
+    border-radius: 0;
+  }
+
+  .page-heading h1 {
+    font-size: 34px;
+  }
+
+  .mobile-nav {
+    border-radius: 22px;
+  }
+}
+
+@media (max-width: 760px) {
+  .page-heading h1 {
+    font-size: 28px;
+  }
+
+  .panel,
+  .journal-sheet {
+    border-radius: 22px;
+    padding: 18px;
+  }
+
+  .table-wrap,
+  .panel > .table-wrap {
+    overflow-x: auto;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+
+  table,
+  .data-table {
+    min-width: 640px;
+  }
+
+  .journal-table {
+    min-width: 0;
+  }
+}
+
+/* User review pass: remove duplicate topbar and protect dense rows from text overlap */
+.workspace {
+  gap: 0;
+}
+
+.workspace-topbar {
+  display: none;
+}
+
+.main {
+  padding-top: 0;
+}
+
+.sidebar-card {
+  align-content: start;
+  gap: 8px;
+}
+
+.sidebar-card strong,
+.sidebar-card p,
+.sidebar-user-email {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.sidebar-user-email {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.sidebar {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  overflow: hidden;
+}
+
+.sidebar-section {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.sidebar-section::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-section::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--border-strong);
+}
+
+.workspace-switch {
+  align-self: end;
+  min-width: 0;
+}
+
+.sidebar-card {
+  align-self: end;
+  border: 0;
+  box-shadow: none;
+  margin-top: 0;
+}
+
+.sidebar-card strong {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 760;
+  line-height: 1.25;
+}
+
+.sidebar-card-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.sidebar-card-actions .secondary-button {
+  min-height: 34px;
+  border-color: var(--border);
+  background: rgb(255 253 248 / 70%);
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.info-row,
+.payment-cell,
+.table-detail,
+.data-table td,
+.data-table th,
+.journal-student-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.info-row > *,
+.payment-cell > *,
+.table-detail > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.info-row span,
+.info-row strong,
+.info-row p,
+.payment-cell strong,
+.payment-cell p {
+  overflow-wrap: anywhere;
+}
+
+.data-table {
+  table-layout: auto;
+}
+
+.data-table td {
+  vertical-align: top;
+}
+
+.teacher-journal-shortcut {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  background: rgb(255 253 248 / 92%);
+  color: var(--text);
+}
+
+.teacher-journal-shortcut h2,
+.teacher-journal-shortcut p {
+  color: inherit;
+}
+
+.teacher-journal-shortcut p {
+  color: var(--muted);
+}
+
+.teacher-journal-copy {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.teacher-journal-copy .status {
+  width: fit-content;
+}
+
+@media (max-width: 1024px) {
+  .workspace {
+    display: block;
+  }
+}
+
+@media (max-width: 760px) {
+  .teacher-journal-shortcut {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-journal-shortcut .button,
+  .teacher-journal-shortcut .secondary-button {
+    width: 100%;
   }
 }

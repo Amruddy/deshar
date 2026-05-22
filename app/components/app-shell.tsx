@@ -64,7 +64,6 @@ function WorkspaceSwitcher({ session }: { session: AppSession }) {
 
 function Sidebar({ items, session }: { items: NavItem[]; session: AppSession | null }) {
   const homePath = session ? workspaceConfig[session.activeWorkspace].homePath : "/";
-  const workspaceLabel = session ? workspaceConfig[session.activeWorkspace].label : "Dev-вход";
 
   return (
     <aside className="sidebar" aria-label="Основная навигация">
@@ -85,11 +84,9 @@ function Sidebar({ items, session }: { items: NavItem[]; session: AppSession | n
       {session ? <WorkspaceSwitcher session={session} /> : null}
 
       <div className="sidebar-card">
-        <span className="status">{workspaceLabel}</span>
         {session ? (
           <>
             <strong>{session.name}</strong>
-            <p>{session.organizationName}</p>
             <div className="sidebar-card-actions">
               <Link className="secondary-button compact-button" href="/profile">
                 Профиль
@@ -104,26 +101,10 @@ function Sidebar({ items, session }: { items: NavItem[]; session: AppSession | n
         ) : (
           <>
             <strong>Тестовый режим</strong>
-            <p>Выберите роль для ручной проверки версии 1.0.</p>
           </>
         )}
       </div>
     </aside>
-  );
-}
-
-function WorkspaceTopbar({ session }: { session: AppSession | null }) {
-  const title = session ? workspaceConfig[session.activeWorkspace].label : "Вход";
-  const subtitle = session ? session.email : "Тестовая авторизация";
-
-  return (
-    <header className="workspace-topbar">
-      <div>
-        <span className="topbar-kicker">Deshar</span>
-        <strong>{title}</strong>
-      </div>
-      <span className="topbar-user">{subtitle}</span>
-    </header>
   );
 }
 
@@ -153,7 +134,6 @@ export async function AppShell({ children }: { children: ReactNode }) {
     <div className="app-shell">
       <Sidebar items={items} session={session} />
       <div className="workspace">
-        <WorkspaceTopbar session={session} />
         <main className="main">{children}</main>
       </div>
       <MobileNav items={items} />

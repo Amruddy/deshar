@@ -141,4 +141,4 @@
 
 Следующий stage большого релиза:
 
-`Final Design System And UX Polish`
+`New Visual Design`

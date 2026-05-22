@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="960" viewBox="0 0 1440 960">
+  <rect width="1440" height="960" fill="#edf2f4"/>
+  <circle cx="1230" cy="130" r="210" fill="#dce8df"/>
+  <circle cx="1180" cy="790" r="260" fill="#e7e2d5"/>
+  <rect x="74" y="54" width="1292" height="852" rx="34" fill="#ffffff" fill-opacity="0.92" stroke="#d5dfe2"/>
+  <rect x="112" y="96" width="212" height="760" rx="26" fill="#f6f8f7" stroke="#dce3e1"/>
+  <text x="146" y="150" fill="#233936" font-family="Arial" font-size="31" font-weight="700">Deshar</text>
+  <rect x="140" y="204" width="156" height="42" rx="14" fill="#dfece7"/>
+  <text x="166" y="232" fill="#25443d" font-family="Arial" font-size="16" font-weight="700">Главная</text>
+  <text x="150" y="300" fill="#667872" font-family="Arial" font-size="16">Журнал</text>
+  <text x="150" y="350" fill="#667872" font-family="Arial" font-size="16">Домашние</text>
+  <text x="150" y="400" fill="#667872" font-family="Arial" font-size="16">Материалы</text>
+  <text x="150" y="450" fill="#667872" font-family="Arial" font-size="16">Оплата</text>
+  <text x="374" y="148" fill="#223b37" font-family="Arial" font-size="40" font-weight="700">Рабочая область преподавателя</text>
+  <rect x="374" y="188" width="610" height="250" rx="30" fill="#223b37"/>
+  <text x="418" y="248" fill="#dce8df" font-family="Arial" font-size="17">следующий урок</text>
+  <text x="418" y="300" fill="#ffffff" font-family="Arial" font-size="34" font-weight="700">Таджвид A</text>
+  <text x="418" y="342" fill="#d7e1de" font-family="Arial" font-size="20">Сегодня, 16:00 · 12 учеников</text>
+  <rect x="418" y="370" width="168" height="40" rx="20" fill="#f3d778"/>
+  <text x="450" y="397" fill="#21312e" font-family="Arial" font-size="15" font-weight="700">Открыть урок</text>
+  <rect x="1018" y="188" width="278" height="250" rx="30" fill="#f7f4ec" stroke="#e3ded1"/>
+  <text x="1054" y="246" fill="#7a6b49" font-family="Arial" font-size="17">внимание</text>
+  <text x="1054" y="294" fill="#2d3734" font-family="Arial" font-size="30" font-weight="700">4 записи</text>
+  <text x="1054" y="334" fill="#6a716d" font-family="Arial" font-size="18">не заполнены в журнале</text>
+  <rect x="374" y="486" width="922" height="286" rx="30" fill="#ffffff" stroke="#d8e1df"/>
+  <text x="418" y="542" fill="#223b37" font-family="Arial" font-size="27" font-weight="700">Группы</text>
+  <rect x="418" y="582" width="250" height="136" rx="22" fill="#eef5f2"/>
+  <rect x="698" y="582" width="250" height="136" rx="22" fill="#f7f4ec"/>
+  <rect x="978" y="582" width="250" height="136" rx="22" fill="#eef2f7"/>
+  <text x="450" y="632" fill="#223b37" font-family="Arial" font-size="22" font-weight="700">Таджвид A</text>
+  <text x="450" y="672" fill="#667872" font-family="Arial" font-size="16">12 учеников · сегодня</text>
+  <text x="730" y="632" fill="#223b37" font-family="Arial" font-size="22" font-weight="700">Коран B</text>
+  <text x="730" y="672" fill="#667872" font-family="Arial" font-size="16">9 учеников · завтра</text>
+  <text x="1010" y="632" fill="#223b37" font-family="Arial" font-size="22" font-weight="700">Индивид.</text>
+  <text x="1010" y="672" fill="#667872" font-family="Arial" font-size="16">3 ученика · неделя</text>
+  <text x="112" y="884" fill="#65736f" font-family="Arial" font-size="15">Вариант 03: минеральный свет, мягкие объемы, акцент на занятии</text>
+</svg>

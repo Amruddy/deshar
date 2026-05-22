@@ -18,14 +18,18 @@ export default async function TeacherPage() {
           <MetricGrid items={data.metrics} />
 
           <section className="panel section teacher-journal-shortcut">
-            <div>
-              <h2>Журнал группы</h2>
+            <div className="teacher-journal-copy">
+              <span className="status">Журнал</span>
               {data.journalShortcut ? (
-                <p>
-                  {data.journalShortcut.name}; {data.journalShortcut.detail}
-                </p>
+                <>
+                  <h2>{data.journalShortcut.name}</h2>
+                  <p>{data.journalShortcut.detail}</p>
+                </>
               ) : (
-                <p>За преподавателем пока нет групп с журналом.</p>
+                <>
+                  <h2>Журнал группы</h2>
+                  <p>За преподавателем пока нет групп с журналом.</p>
+                </>
               )}
             </div>
             {data.journalShortcut ? (
