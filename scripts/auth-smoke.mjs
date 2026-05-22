@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { existsSync, readFileSync } from "node:fs";
-import { randomUUID } from "node:crypto";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
@@ -45,7 +44,7 @@ const supabaseUrl = requiredEnv("NEXT_PUBLIC_SUPABASE_URL");
 const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
 const baseUrl = normalizeBaseUrl(process.env.SMOKE_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://127.0.0.1:3000");
-const smokePassword = process.env.DESHAR_AUTH_SMOKE_PASSWORD || `DesharSmoke!${randomUUID()}aA1`;
+const smokePassword = process.env.DESHAR_AUTH_SMOKE_PASSWORD || "DesharSmoke123!";
 const disabledSmokeEmail = normalizeEmail(process.env.DESHAR_AUTH_SMOKE_DISABLED_EMAIL || "disabled-smoke@example.test");
 
 if (!publishableKey?.trim()) {
@@ -56,6 +55,18 @@ const adminClient = createClient(supabaseUrl, serviceRoleKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false,
+  },
+  global: {
+    fetch: smokeFetch,
+  },
+});
+const authClient = createClient(supabaseUrl, publishableKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
+  global: {
+    fetch: smokeFetch,
   },
 });
 
@@ -94,16 +105,40 @@ console.log("  [ok] users.auth_status = disabled не проходит session r
 console.log("\nAuth smoke прошел.");
 
 async function upsertAuthUser(email, password) {
+  const currentAuthUserId = await signInAuthUser(email, password);
+  if (currentAuthUserId) {
+    return currentAuthUserId;
+  }
+
+  const linkedDomainUser = await findLinkedDomainUserByEmail(email);
+  if (linkedDomainUser?.auth_user_id) {
+    const { data, error } = await retrySupabase(() =>
+      adminClient.auth.admin.updateUserById(linkedDomainUser.auth_user_id, {
+        email_confirm: true,
+        password,
+        user_metadata: {
+          deshar_smoke: true,
+        },
+      }),
+    );
+
+    if (!error && data.user?.id) {
+      return data.user.id;
+    }
+  }
+
   const existingUser = await findAuthUserByEmail(email);
 
   if (existingUser) {
-    const { data, error } = await adminClient.auth.admin.updateUserById(existingUser.id, {
-      email_confirm: true,
-      password,
-      user_metadata: {
-        deshar_smoke: true,
-      },
-    });
+    const { data, error } = await retrySupabase(() =>
+      adminClient.auth.admin.updateUserById(existingUser.id, {
+        email_confirm: true,
+        password,
+        user_metadata: {
+          deshar_smoke: true,
+        },
+      }),
+    );
 
     if (error || !data.user?.id) {
       fail(`Не удалось обновить Supabase Auth пользователя ${email}: ${error?.message ?? "пустой ответ"}`);
@@ -112,14 +147,16 @@ async function upsertAuthUser(email, password) {
     return data.user.id;
   }
 
-  const { data, error } = await adminClient.auth.admin.createUser({
-    email,
-    email_confirm: true,
-    password,
-    user_metadata: {
-      deshar_smoke: true,
-    },
-  });
+  const { data, error } = await retrySupabase(() =>
+    adminClient.auth.admin.createUser({
+      email,
+      email_confirm: true,
+      password,
+      user_metadata: {
+        deshar_smoke: true,
+      },
+    }),
+  );
 
   if (error || !data.user?.id) {
     fail(`Не удалось создать Supabase Auth пользователя ${email}: ${error?.message ?? "пустой ответ"}`);
@@ -128,13 +165,40 @@ async function upsertAuthUser(email, password) {
   return data.user.id;
 }
 
+async function signInAuthUser(email, password) {
+  const { data, error } = await retrySupabase(() => authClient.auth.signInWithPassword({ email, password }));
+
+  if (data.user?.id) {
+    await authClient.auth.signOut();
+    return data.user.id;
+  }
+
+  if (error && error.message !== "Invalid login credentials") {
+    fail(`Не удалось проверить Supabase Auth вход ${email}: ${error.message}`);
+  }
+
+  return null;
+}
+
+async function findLinkedDomainUserByEmail(email) {
+  const { data, error } = await retrySupabase(() =>
+    adminClient.from("users").select("id,email,auth_user_id").eq("email", normalizeEmail(email)).maybeSingle(),
+  );
+
+  if (error) {
+    fail(`Не удалось прочитать доменный профиль ${email}: ${error.message}`);
+  }
+
+  return data;
+}
+
 async function findAuthUserByEmail(email) {
   const targetEmail = normalizeEmail(email);
   let page = 1;
   const perPage = 100;
 
   while (true) {
-    const { data, error } = await adminClient.auth.admin.listUsers({ page, perPage });
+    const { data, error } = await retrySupabase(() => adminClient.auth.admin.listUsers({ page, perPage }));
 
     if (error) {
       fail(`Не удалось прочитать Supabase Auth users: ${error.message}`);
@@ -156,16 +220,18 @@ async function findAuthUserByEmail(email) {
 }
 
 async function linkDomainUser(account, authUserId) {
-  const { data, error } = await adminClient
-    .from("users")
-    .update({
-      auth_status: "active",
-      auth_user_id: authUserId,
-      status: "active",
-    })
-    .eq("id", account.userId)
-    .select("id,email,auth_status,auth_user_id,status")
-    .maybeSingle();
+  const { data, error } = await retrySupabase(() =>
+    adminClient
+      .from("users")
+      .update({
+        auth_status: "active",
+        auth_user_id: authUserId,
+        status: "active",
+      })
+      .eq("id", account.userId)
+      .select("id,email,auth_status,auth_user_id,status")
+      .maybeSingle(),
+  );
 
   if (error || !data) {
     fail(`Не удалось связать доменный профиль ${account.email}: ${error?.message ?? "профиль не найден"}`);
@@ -179,12 +245,14 @@ async function linkDomainUser(account, authUserId) {
 }
 
 async function assertActiveMember(account) {
-  const { data, error } = await adminClient
-    .from("organization_members")
-    .select("roles,status")
-    .eq("organization_id", seedOrganizationId)
-    .eq("user_id", account.userId)
-    .maybeSingle();
+  const { data, error } = await retrySupabase(() =>
+    adminClient
+      .from("organization_members")
+      .select("roles,status")
+      .eq("organization_id", seedOrganizationId)
+      .eq("user_id", account.userId)
+      .maybeSingle(),
+  );
 
   if (error || !data) {
     fail(`Не найдено активное членство organization_members для ${account.email}: ${error?.message ?? "нет строки"}`);
@@ -200,32 +268,36 @@ async function assertActiveMember(account) {
 }
 
 async function upsertDisabledSmokeProfile(authUserId) {
-  const { error: userError } = await adminClient.from("users").upsert(
-    {
-      auth_status: "disabled",
-      auth_user_id: authUserId,
-      email: disabledSmokeEmail,
-      id: disabledSmokeUserId,
-      name: "Smoke Disabled Auth",
-      status: "active",
-    },
-    { onConflict: "id" },
+  const { error: userError } = await retrySupabase(() =>
+    adminClient.from("users").upsert(
+      {
+        auth_status: "disabled",
+        auth_user_id: authUserId,
+        email: disabledSmokeEmail,
+        id: disabledSmokeUserId,
+        name: "Smoke Disabled Auth",
+        status: "active",
+      },
+      { onConflict: "id" },
+    ),
   );
 
   if (userError) {
     fail(`Не удалось подготовить disabled smoke profile: ${userError.message}`);
   }
 
-  const { error: memberError } = await adminClient.from("organization_members").upsert(
-    {
-      id: disabledSmokeMemberId,
-      organization_id: seedOrganizationId,
-      permissions: [],
-      roles: ["student"],
-      status: "active",
-      user_id: disabledSmokeUserId,
-    },
-    { onConflict: "organization_id,user_id" },
+  const { error: memberError } = await retrySupabase(() =>
+    adminClient.from("organization_members").upsert(
+      {
+        id: disabledSmokeMemberId,
+        organization_id: seedOrganizationId,
+        permissions: [],
+        roles: ["student"],
+        status: "active",
+        user_id: disabledSmokeUserId,
+      },
+      { onConflict: "organization_id,user_id" },
+    ),
   );
 
   if (memberError) {
@@ -250,9 +322,12 @@ async function signInWithCookieSession(email, password) {
         }
       },
     },
+    global: {
+      fetch: smokeFetch,
+    },
   });
 
-  const { data, error } = await client.auth.signInWithPassword({ email, password });
+  const { data, error } = await retrySupabase(() => client.auth.signInWithPassword({ email, password }));
 
   if (error || !data.user) {
     fail(`Не удалось войти через Supabase Auth как ${email}: ${error?.message ?? "пустой ответ"}`);
@@ -279,31 +354,71 @@ async function expectOk(path, cookieHeader, label = path) {
     fail(`${label}: ожидался 2xx, получено ${response.status}${formatLocation(response.location)}`);
   }
 
+  const supabaseDataState = getSupabaseDataFailureState(response.body);
+
+  if (supabaseDataState) {
+    fail(`${label}: страница показала Supabase ${supabaseDataState} state`);
+  }
+
   console.log(`  [ok] ${label}: ${path}`);
 }
 
 async function expectRedirect(path, cookieHeader, expectedPathPrefix) {
   const response = await requestPath(path, cookieHeader);
-  const location = response.location ? locationPath(response.location) : "";
+  const location = response.location ? locationPath(response.location) : redirectedPathFromBody(response.body);
 
-  if (response.status < 300 || response.status >= 400 || !location.startsWith(expectedPathPrefix)) {
+  if (!isRedirectResponse(response.status, location) || !location.startsWith(expectedPathPrefix)) {
     fail(`${path}: ожидался redirect на ${expectedPathPrefix}, получено ${response.status}${formatLocation(response.location)}`);
   }
 }
 
+function isRedirectResponse(status, location) {
+  return Boolean(location) && ((status >= 300 && status < 400) || status === 200);
+}
+
 async function requestPath(path, cookieHeader) {
-  const response = await fetch(new URL(path, baseUrl), {
-    headers: cookieHeader ? { cookie: cookieHeader } : {},
-    redirect: "manual",
-  });
+  const maxAttempts = 3;
+  let lastError = null;
 
-  const body = await response.text();
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      return await fetchPathOnce(path, cookieHeader);
+    } catch (error) {
+      lastError = error;
 
-  return {
-    body,
-    location: response.headers.get("location"),
-    status: response.status,
-  };
+      if (!isRetryableSupabaseError(error) || attempt === maxAttempts) {
+        break;
+      }
+
+      await delay(500 * attempt);
+    }
+  }
+
+  const message = lastError instanceof Error ? lastError.message : String(lastError);
+  fail(`${path}: локальный запрос не удался: ${message}`);
+}
+
+async function fetchPathOnce(path, cookieHeader) {
+  const timeoutMs = Number.parseInt(process.env.SMOKE_APP_FETCH_TIMEOUT_MS ?? "15000", 10);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : 15000);
+
+  try {
+    const response = await fetch(new URL(path, baseUrl), {
+      headers: cookieHeader ? { Cookie: cookieHeader } : {},
+      redirect: "manual",
+      signal: controller.signal,
+    });
+    const body = await response.text();
+
+    return {
+      body,
+      location: response.headers.get("location"),
+      status: response.status,
+    };
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 async function expectLoginDevAuthVisibility() {
@@ -326,6 +441,81 @@ async function expectLoginDevAuthVisibility() {
 
 function cookieHeaderFromJar(jar) {
   return [...jar.entries()].map(([name, value]) => `${name}=${value}`).join("; ");
+}
+
+async function retrySupabase(operation) {
+  const maxAttempts = 3;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const result = await operation();
+
+      if (!result?.error || !isRetryableSupabaseError(result.error) || attempt === maxAttempts) {
+        return result;
+      }
+    } catch (error) {
+      if (!isRetryableSupabaseError(error) || attempt === maxAttempts) {
+        throw error;
+      }
+    }
+
+    await delay(500 * attempt);
+  }
+
+  return operation();
+}
+
+async function smokeFetch(input, init) {
+  const timeoutMs = Number.parseInt(process.env.SMOKE_SUPABASE_FETCH_TIMEOUT_MS ?? "15000", 10);
+  const controller = new AbortController();
+  const callerSignal = init?.signal;
+  const abortFromCaller = () => controller.abort();
+  const timeoutId = setTimeout(() => controller.abort(), Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : 15000);
+
+  if (callerSignal?.aborted) {
+    controller.abort();
+  } else {
+    callerSignal?.addEventListener("abort", abortFromCaller, { once: true });
+  }
+
+  try {
+    const headers = new Headers(init?.headers);
+    headers.set("connection", "close");
+
+    const response = await fetch(input, { ...init, cache: "no-store", headers, signal: controller.signal });
+    const body = await response.arrayBuffer();
+    const responseBody = response.status === 204 || response.status === 205 ? null : body;
+
+    return new Response(responseBody, {
+      headers: response.headers,
+      status: response.status,
+      statusText: response.statusText,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+    callerSignal?.removeEventListener("abort", abortFromCaller);
+  }
+}
+
+function isRetryableSupabaseError(error) {
+  const message = [
+    error?.message,
+    error?.code,
+    error?.cause?.message,
+    error?.cause?.code,
+    error?.cause?.cause?.message,
+    error?.cause?.cause?.code,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return /AbortError|aborted|fetch failed|terminated|ECONNRESET|UND_ERR_CONNECT_TIMEOUT|Connect Timeout/i.test(message);
+}
+
+function delay(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 function loadLocalEnv() {
@@ -393,6 +583,42 @@ function locationPath(location) {
   } catch {
     return location;
   }
+}
+
+function redirectedPathFromBody(body) {
+  const nextRedirectMatch = body.match(/NEXT_REDIRECT;(?:replace|push);([^;"]+);/);
+
+  if (nextRedirectMatch?.[1]) {
+    return locationPath(decodeHtmlAttribute(nextRedirectMatch[1]));
+  }
+
+  const metaRedirectMatch = body.match(/<meta[^>]+id=["']__next-page-redirect["'][^>]+content=["'][^"']*url=([^"']+)["']/);
+
+  if (metaRedirectMatch?.[1]) {
+    return locationPath(decodeHtmlAttribute(metaRedirectMatch[1]));
+  }
+
+  return "";
+}
+
+function decodeHtmlAttribute(value) {
+  return value
+    .replaceAll("&amp;", "&")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#x2F;", "/")
+    .replaceAll("&#47;", "/");
+}
+
+function getSupabaseDataFailureState(html) {
+  if (html.includes('data-supabase-state="error"')) {
+    return "error";
+  }
+
+  if (html.includes('data-supabase-state="setup"')) {
+    return "setup";
+  }
+
+  return null;
 }
 
 function formatLocation(location) {

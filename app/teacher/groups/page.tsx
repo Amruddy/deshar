@@ -37,11 +37,11 @@ export default async function TeacherGroupsPage() {
                 header: "Действия",
                 render: (group) => (
                   <div className="button-row">
+                    <Link className="button compact-button" href={`/teacher/groups/${group.id}/journal`}>
+                      Открыть журнал
+                    </Link>
                     <Link className="secondary-button compact-button" href={`/teacher/groups/${group.id}`}>
                       Открыть группу
-                    </Link>
-                    <Link className="secondary-button compact-button" href={`/teacher/groups/${group.id}/journal`}>
-                      Открыть журнал
                     </Link>
                     {group.nextLessonId ? (
                       <Link className="secondary-button compact-button" href={`/teacher/lessons/${group.nextLessonId}`}>

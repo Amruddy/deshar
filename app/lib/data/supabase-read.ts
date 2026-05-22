@@ -512,6 +512,11 @@ export type TeacherOverviewData = {
   metrics: MetricItem[];
   upcomingLessons: LessonSummary[];
   attentionPayments: PaymentSummary[];
+  journalShortcut: {
+    detail: string;
+    href: string;
+    name: string;
+  } | null;
 };
 
 export type TeacherGroupItem = {
@@ -1698,35 +1703,34 @@ async function getBaseOrganizationData(client: SupabaseClient, organizationId: s
 
 export async function getAdminOverview(organizationId: string) {
   return readSupabaseData<AdminOverviewData>(async (client) => {
-    const [organizationResult, coursesResult, groupsResult, studentsResult, membersResult] = await Promise.all([
-      client.from("organizations").select("id,name,timezone").eq("id", organizationId).maybeSingle(),
-      client
-        .from("courses")
-        .select("id,name,description,type,format,lesson_mark_scale,status")
-        .eq("organization_id", organizationId),
-      client.from("groups").select("id,course_id,teacher_id,name,status").eq("organization_id", organizationId),
-      client.from("students").select("id,user_id,name,phone,email,status").eq("organization_id", organizationId),
-      client.from("organization_members").select("id,user_id,roles,permissions").eq("organization_id", organizationId),
-    ]);
+    const now = new Date().toISOString();
+    const [organizationResult, coursesResult, groupsResult, studentsResult, membersResult, lessonsResult, paymentsResult] =
+      await Promise.all([
+        client.from("organizations").select("id,name,timezone").eq("id", organizationId).maybeSingle(),
+        client
+          .from("courses")
+          .select("id,name,description,type,format,lesson_mark_scale,status")
+          .eq("organization_id", organizationId),
+        client.from("groups").select("id,course_id,teacher_id,name,status").eq("organization_id", organizationId),
+        client.from("students").select("id,user_id,name,phone,email,status").eq("organization_id", organizationId),
+        client.from("organization_members").select("id,user_id,roles,permissions").eq("organization_id", organizationId),
+        client
+          .from("lessons")
+          .select("id,course_id,group_id,teacher_id,starts_at,ends_at,topic")
+          .eq("organization_id", organizationId)
+          .gte("starts_at", now)
+          .order("starts_at", { ascending: true })
+          .limit(5),
+        client
+          .from("payments")
+          .select("id,student_id,course_id,group_id,amount,currency,period_start,period_end,due_at,status")
+          .eq("organization_id", organizationId),
+      ]);
     const organization = single<OrganizationRow>(organizationResult, "Организация");
     const courses = rows<CourseRow>(coursesResult, "Курсы");
     const groups = rows<GroupRow>(groupsResult, "Группы");
     const students = rows<StudentRow>(studentsResult, "Ученики");
     const members = rows<MemberRow>(membersResult, "Роли");
-    const now = new Date().toISOString();
-    const [lessonsResult, paymentsResult] = await Promise.all([
-      client
-        .from("lessons")
-        .select("id,course_id,group_id,teacher_id,starts_at,ends_at,topic")
-        .eq("organization_id", organizationId)
-        .gte("starts_at", now)
-        .order("starts_at", { ascending: true })
-        .limit(5),
-      client
-        .from("payments")
-        .select("id,student_id,course_id,group_id,amount,currency,period_start,period_end,due_at,status")
-        .eq("organization_id", organizationId),
-    ]);
     const lessons = rows<LessonRow>(lessonsResult, "Ближайшие занятия");
     const payments = rows<PaymentRow>(paymentsResult, "Оплата");
     const courseMap = byId(courses);
@@ -2567,6 +2571,10 @@ export async function getTeacherOverview(organizationId: string, email: string) 
     const studentMap = byId(students.filter((student) => studentIds.has(student.id)));
     const courseMap = byId(courses);
     const groupMap = byId(teacherGroups);
+    const primaryJournalGroup = teacherGroups[0] ?? null;
+    const primaryJournalGroupStudents = primaryJournalGroup
+      ? groupStudents.filter((item) => item.group_id === primaryJournalGroup.id && item.status === "active").length
+      : 0;
     const attentionPayments = payments
       .filter((payment) => studentIds.has(payment.student_id))
       .filter(isPaymentAttention)
@@ -2582,6 +2590,13 @@ export async function getTeacherOverview(organizationId: string, email: string) 
       ],
       upcomingLessons: summarizeLessons(lessons, courseMap, groupMap),
       attentionPayments: summarizePayments(attentionPayments, studentMap, courseMap, groupMap),
+      journalShortcut: primaryJournalGroup
+        ? {
+            detail: `${courseMap.get(primaryJournalGroup.course_id)?.name ?? "Курс"}; учеников: ${primaryJournalGroupStudents}`,
+            href: `/teacher/groups/${primaryJournalGroup.id}/journal`,
+            name: primaryJournalGroup.name,
+          }
+        : null,
     };
   });
 }

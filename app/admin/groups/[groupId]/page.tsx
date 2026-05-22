@@ -2,6 +2,7 @@ import Link from "next/link";
 import { DataTable, InfoList, SupabaseDataPage } from "@/app/components/supabase-data-page";
 import { ConfirmSubmitButton } from "@/app/components/confirm-submit-button";
 import { PageCreateAction } from "@/app/components/page-create-action";
+import { SubmitButton } from "@/app/components/submit-button";
 import {
   addStudentToGroup,
   createGroupScheduleRule,
@@ -15,6 +16,10 @@ import { requireWorkspace } from "@/app/lib/dev-auth";
 type AdminGroupPageProps = {
   params: Promise<{
     groupId: string;
+  }>;
+  searchParams: Promise<{
+    actionError?: string;
+    actionMessage?: string;
   }>;
 };
 
@@ -36,6 +41,24 @@ const weekdays = [
   { label: "Воскресенье", value: "0" },
 ];
 
+const actionMessages: Record<string, string> = {
+  group_updated: "Группа обновлена.",
+  lessons_generated: "Уроки по расписанию созданы.",
+  lessons_unchanged: "Новых уроков не было: расписание уже материализовано для выбранного периода.",
+  schedule_created: "Правило расписания сохранено.",
+  schedule_deleted: "Правило расписания удалено.",
+  student_added: "Ученик добавлен в группу.",
+};
+
+const actionErrors: Record<string, string> = {
+  group_update_failed: "Не удалось обновить группу. Проверьте поля и подключение Supabase.",
+  lessons_generate_failed: "Не удалось создать уроки. Проверьте расписание и подключение Supabase.",
+  schedule_create_failed: "Не удалось сохранить расписание. Проверьте даты, время и подключение Supabase.",
+  schedule_delete_failed: "Не удалось удалить расписание. Проверьте будущие уроки и подключение Supabase.",
+  student_add_failed: "Не удалось добавить ученика. Проверьте список учеников и подключение Supabase.",
+  supabase_failed: "Supabase временно не ответил. Повторите действие через несколько секунд.",
+};
+
 function TrashIcon() {
   return (
     <svg className="trash-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -44,10 +67,13 @@ function TrashIcon() {
   );
 }
 
-export default async function AdminGroupPage({ params }: AdminGroupPageProps) {
+export default async function AdminGroupPage({ params, searchParams }: AdminGroupPageProps) {
   const session = await requireWorkspace("admin");
   const { groupId } = await params;
+  const query = await searchParams;
   const result = await getAdminGroupDetail(session.organizationId, groupId);
+  const actionMessage = query.actionMessage ? actionMessages[query.actionMessage] : null;
+  const actionError = query.actionError ? actionErrors[query.actionError] : null;
 
   return (
     <SupabaseDataPage
@@ -63,6 +89,17 @@ export default async function AdminGroupPage({ params }: AdminGroupPageProps) {
 
         return (
           <>
+            {actionMessage ? (
+              <div className="success-message" role="status">
+                {actionMessage}
+              </div>
+            ) : null}
+            {actionError ? (
+              <div className="error-message" role="alert">
+                {actionError}
+              </div>
+            ) : null}
+
             <section className="admin-detail-grid">
               <div className="panel admin-main-panel">
                 <div className="section-heading">
@@ -102,9 +139,9 @@ export default async function AdminGroupPage({ params }: AdminGroupPageProps) {
                               ))}
                             </select>
                           </label>
-                          <button className="button" type="submit">
+                          <SubmitButton pendingLabel="Сохраняем группу...">
                             Сохранить
-                          </button>
+                          </SubmitButton>
                         </form>
                       </PageCreateAction>
 
@@ -124,9 +161,9 @@ export default async function AdminGroupPage({ params }: AdminGroupPageProps) {
                                 ))}
                               </select>
                             </label>
-                            <button className="button" type="submit">
+                            <SubmitButton pendingLabel="Добавляем ученика...">
                               Добавить в группу
-                            </button>
+                            </SubmitButton>
                           </form>
                         ) : (
                           <p className="empty-state">Все активные ученики уже добавлены в группу.</p>
@@ -167,9 +204,9 @@ export default async function AdminGroupPage({ params }: AdminGroupPageProps) {
                             Действует до
                             <input name="endsOn" type="date" />
                           </label>
-                          <button className="button" type="submit">
+                          <SubmitButton pendingLabel="Сохраняем расписание...">
                             Сохранить правило
-                          </button>
+                          </SubmitButton>
                         </form>
                         <p className="form-note">
                           Выберите один или несколько дней. Правило может действовать весь учебный срок.
@@ -187,9 +224,9 @@ export default async function AdminGroupPage({ params }: AdminGroupPageProps) {
                                 <option value="schedule_end">До окончания расписания</option>
                               </select>
                             </label>
-                            <button className="button" type="submit">
+                            <SubmitButton pendingLabel="Создаем уроки...">
                               Создать уроки
-                            </button>
+                            </SubmitButton>
                           </form>
                         ) : (
                           <p className="empty-state">Сначала добавьте хотя бы одно правило расписания.</p>

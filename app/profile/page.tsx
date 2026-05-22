@@ -10,12 +10,17 @@ export default async function ProfilePage() {
   }
 
   return (
-    <main className="public-shell auth-page-shell">
-      <section className="panel auth-page-card">
+    <>
+      <div className="page-heading">
+        <span className="status">Профиль</span>
+        <h1>{session.name}</h1>
+        <p>{session.email}</p>
+      </div>
+
+      <section className="panel auth-page-card profile-card">
         <div>
-          <span className="status">Профиль</span>
-          <h1>{session.name}</h1>
-          <p>{session.email}</p>
+          <h2>Доступ и рабочая область</h2>
+          <p>Основные данные текущего входа.</p>
         </div>
 
         <dl className="profile-list">
@@ -39,6 +44,6 @@ export default async function ProfilePage() {
           </button>
         </form>
       </section>
-    </main>
+    </>
   );
 }

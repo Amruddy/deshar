@@ -31,6 +31,7 @@
 - `27-auth-stage-2-supabase-auth-session-foundation-plan.md` - основа Supabase Auth session: SSR/client helpers, callback, login/logout/password reset, profile, dev-auth fallback по флагу и таймауты Supabase.
 - `28-auth-stage-3-account-linking-schema-plan.md` - связь Supabase Auth user с доменной таблицей `users`: `auth_user_id`, `auth_status`, SQL-инструкция, seed/dev users и session resolver через активный профиль и членство.
 - `29-auth-stage-4-admin-invitations-plan.md` - админские приглашения преподавателей и учеников через Supabase Auth Admin API, повторная отправка, отключение доступа и статусы доступа в админских списках.
+- `30-auth-stage-5-auth-smoke-hardening-plan.md` - auth smoke и hardening production-auth flow: реальные Supabase Auth аккаунты, logout, запрет чужих рабочих областей и disabled-профиль.
 - `01-initial-product-implementation-plan.md` - исторический план первой рабочей реализации.
 - `02-system-a-ui-implementation-plan.md` - исторический план UI-направления System A.
 

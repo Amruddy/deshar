@@ -1,13 +1,35 @@
 import Link from "next/link";
 import { DataTable, SupabaseDataPage } from "@/app/components/supabase-data-page";
 import { PageCreateAction } from "@/app/components/page-create-action";
+import { SubmitButton } from "@/app/components/submit-button";
 import { getAdminGroups } from "@/app/lib/data/supabase-read";
 import { requireWorkspace } from "@/app/lib/dev-auth";
 import { assignStudentToGroup, createGroup } from "@/app/admin/actions";
 
-export default async function AdminGroupsPage() {
+type AdminGroupsPageProps = {
+  searchParams: Promise<{
+    actionError?: string;
+    actionMessage?: string;
+  }>;
+};
+
+const actionMessages: Record<string, string> = {
+  group_created: "Группа создана. Она уже доступна в списке.",
+  student_assigned: "Ученик добавлен в группу.",
+};
+
+const actionErrors: Record<string, string> = {
+  group_create_failed: "Не удалось создать группу. Проверьте поля и подключение Supabase.",
+  student_assign_failed: "Не удалось добавить ученика в группу. Проверьте поля и подключение Supabase.",
+  supabase_failed: "Supabase временно не ответил. Повторите действие через несколько секунд.",
+};
+
+export default async function AdminGroupsPage({ searchParams }: AdminGroupsPageProps) {
   const session = await requireWorkspace("admin");
+  const params = await searchParams;
   const result = await getAdminGroups(session.organizationId);
+  const actionMessage = params.actionMessage ? actionMessages[params.actionMessage] : null;
+  const actionError = params.actionError ? actionErrors[params.actionError] : null;
 
   return (
     <SupabaseDataPage
@@ -60,9 +82,9 @@ export default async function AdminGroupsPage() {
                       <option value="paused">Пауза</option>
                     </select>
                   </label>
-                  <button className="button" type="submit">
+                  <SubmitButton pendingLabel="Создаем группу...">
                     Сохранить группу
-                  </button>
+                  </SubmitButton>
                 </form>
               </PageCreateAction>
 
@@ -94,13 +116,23 @@ export default async function AdminGroupsPage() {
                       ))}
                     </select>
                   </label>
-                  <button className="button" type="submit">
+                  <SubmitButton pendingLabel="Добавляем ученика...">
                     Добавить в группу
-                  </button>
+                  </SubmitButton>
                 </form>
               </PageCreateAction>
             </div>
           </div>
+          {actionMessage ? (
+            <div className="success-message" role="status">
+              {actionMessage}
+            </div>
+          ) : null}
+          {actionError ? (
+            <div className="error-message" role="alert">
+              {actionError}
+            </div>
+          ) : null}
           <DataTable
             rows={data.groups}
             keyForRow={(group) => group.id}

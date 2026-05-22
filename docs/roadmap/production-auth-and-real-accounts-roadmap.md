@@ -116,7 +116,7 @@
 
 Статус:
 
-активный stage.
+завершен, PR #52.
 
 Цель:
 
@@ -137,6 +137,8 @@
 
 ## 4. Первый implementation stage
 
-После завершения Auth Stage 4 текущим кодовым stage должен стать:
+После завершения Auth Stage 5 подплан `Production Auth And Real Accounts` считается завершенным.
 
-`Auth Stage 5. Auth Smoke And Hardening`
+Следующий stage большого релиза:
+
+`Final Design System And UX Polish`

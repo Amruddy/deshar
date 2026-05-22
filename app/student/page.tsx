@@ -8,7 +8,7 @@ export default async function StudentPage() {
 
   return (
     <SupabaseDataPage
-      title="Кабинет ученика"
+      title="Сегодня"
       description="Ближайшее занятие, задания, материалы, прогресс и платежи в одном месте."
       result={result}
     >
