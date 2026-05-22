@@ -31,7 +31,7 @@ export function SupabaseDataPage<T>({ title, description, result, children }: Su
 
 function SupabaseSetupPanel({ missingEnv }: { missingEnv: string[] }) {
   return (
-    <section className="panel system-state">
+    <section className="panel system-state" data-supabase-state="setup">
       <h2>Supabase не настроен</h2>
       <p>
         Для этого раздела нужны переменные окружения и примененная схема Supabase. Добавьте значения в `.env.local`,
@@ -55,7 +55,7 @@ function SupabaseErrorPanel({ message }: { message: string }) {
   const notFound = isNotFoundMessage(message);
 
   return (
-    <section className="panel system-state">
+    <section className="panel system-state" data-supabase-state="error">
       <h2>{notFound ? "Данные не найдены" : "Не удалось загрузить данные"}</h2>
       <p>
         {notFound
@@ -115,7 +115,7 @@ export function DataTable<T>({
 
   return (
     <div className="table-wrap">
-      <table>
+      <table className="data-table">
         <thead>
           <tr>
             {columns.map((column) => (
@@ -127,7 +127,9 @@ export function DataTable<T>({
           {rows.map((row) => (
             <tr key={keyForRow(row)}>
               {columns.map((column) => (
-                <td key={column.header}>{column.render(row)}</td>
+                <td data-label={column.header} key={column.header}>
+                  {column.render(row)}
+                </td>
               ))}
             </tr>
           ))}

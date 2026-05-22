@@ -8,7 +8,7 @@ export default async function AdminPage() {
 
   return (
     <SupabaseDataPage
-      title="Обзор администратора"
+      title="Сегодня в школе"
       description="Сводка по курсам, группам, ученикам и ближайшим занятиям из Supabase."
       result={result}
     >
@@ -16,7 +16,7 @@ export default async function AdminPage() {
         <>
           <MetricGrid items={data.metrics} />
 
-          <section className="grid" style={{ marginTop: 16 }}>
+          <section className="overview-grid section">
             <div className="panel">
               <h2>Ближайшие занятия</h2>
               <InfoList

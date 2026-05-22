@@ -51,6 +51,10 @@
 
 ### Release Stage 2. Production Auth And Real Accounts
 
+Статус:
+
+завершен, PR #52.
+
 Цель:
 
 заменить dev-auth настоящими аккаунтами Supabase Auth.
@@ -70,6 +74,10 @@
 - dev-auth остается только как локальный инструмент разработки.
 
 ### Release Stage 3. Final Design System And UX Polish
+
+Статус:
+
+активный stage.
 
 Цель:
 
@@ -121,4 +129,4 @@
 
 Следующий кодовый stage:
 
-`Auth Stage 5. Auth Smoke And Hardening`
+`Final Design System And UX Polish`

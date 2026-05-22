@@ -2,10 +2,12 @@
 
 ## 0. Статус
 
-- Статус плана: активный кодовый stage.
+- Статус плана: завершен, PR #52.
 - Большой блок: `Release 1.0`.
 - Подблок: `Production Auth And Real Accounts`.
 - Планируемая ветка: `feat/auth-stage-5-auth-smoke-hardening`.
+- Коммит stage: `b624a9d`.
+- Merge commit в `main`: `8e3ca33`.
 - Roadmap релиза: `docs/roadmap/release-1-roadmap.md`.
 - Roadmap auth-блока: `docs/roadmap/production-auth-and-real-accounts-roadmap.md`.
 - Предыдущий завершенный plan: `docs/work-plans/completed/29-auth-stage-4-admin-invitations-plan.md`.

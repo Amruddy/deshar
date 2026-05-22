@@ -57,7 +57,7 @@ export async function WorkspacePage({
         </section>
       ) : null}
 
-      <section className="panel" style={{ marginTop: 16 }}>
+      <section className="panel section">
         <h2>Минимальная рабочая область</h2>
         <ul className="muted-list">
           {items.map((item) => (

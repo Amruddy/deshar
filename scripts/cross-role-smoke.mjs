@@ -101,7 +101,7 @@ async function checkPath(role, path, label = path) {
   try {
     const response = await fetch(targetUrl, {
       headers: {
-        cookie: role.cookie,
+        Cookie: role.cookie,
       },
       redirect: "manual",
     });
@@ -118,6 +118,14 @@ async function checkPath(role, path, label = path) {
       const redirectSuffix = redirectTarget ? ` -> ${redirectTarget}` : "";
       failures.push(`${role.name}: ${path} вернул ${response.status}${redirectSuffix}`);
       console.log(`  [fail] ${label}: ${response.status}${redirectSuffix}`);
+      return { body };
+    }
+
+    const supabaseDataState = getSupabaseDataFailureState(body);
+
+    if (supabaseDataState) {
+      failures.push(`${role.name}: ${path} показал Supabase ${supabaseDataState} state`);
+      console.log(`  [fail] ${label}: Supabase ${supabaseDataState} state`);
       return { body };
     }
 
@@ -167,6 +175,18 @@ function collectLinks(html) {
 
 function decodeHtmlAttribute(value) {
   return value.replaceAll("&amp;", "&").replaceAll("&#x2F;", "/").replaceAll("&#47;", "/");
+}
+
+function getSupabaseDataFailureState(html) {
+  if (html.includes('data-supabase-state="error"')) {
+    return "error";
+  }
+
+  if (html.includes('data-supabase-state="setup"')) {
+    return "setup";
+  }
+
+  return null;
 }
 
 function normalizeBaseUrl(value) {

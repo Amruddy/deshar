@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { InfoList, MetricGrid, SupabaseDataPage } from "@/app/components/supabase-data-page";
 import { getTeacherOverview } from "@/app/lib/data/supabase-read";
 import { requireWorkspace } from "@/app/lib/dev-auth";
@@ -8,7 +9,7 @@ export default async function TeacherPage() {
 
   return (
     <SupabaseDataPage
-      title="Обзор преподавателя"
+      title="Мои занятия и ученики"
       description="Мои группы, ближайшие занятия и ученики, которым нужно внимание."
       result={result}
     >
@@ -16,7 +17,29 @@ export default async function TeacherPage() {
         <>
           <MetricGrid items={data.metrics} />
 
-          <section className="grid" style={{ marginTop: 16 }}>
+          <section className="panel section teacher-journal-shortcut">
+            <div>
+              <h2>Журнал группы</h2>
+              {data.journalShortcut ? (
+                <p>
+                  {data.journalShortcut.name}; {data.journalShortcut.detail}
+                </p>
+              ) : (
+                <p>За преподавателем пока нет групп с журналом.</p>
+              )}
+            </div>
+            {data.journalShortcut ? (
+              <Link className="button" href={data.journalShortcut.href}>
+                Открыть журнал
+              </Link>
+            ) : (
+              <Link className="secondary-button" href="/teacher/groups">
+                Открыть группы
+              </Link>
+            )}
+          </section>
+
+          <section className="overview-grid section">
             <div className="panel">
               <h2>Ближайшие занятия</h2>
               <InfoList

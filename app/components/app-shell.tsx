@@ -113,14 +113,14 @@ function Sidebar({ items, session }: { items: NavItem[]; session: AppSession | n
 }
 
 function WorkspaceTopbar({ session }: { session: AppSession | null }) {
-  const title = session && session.activeWorkspace !== "student" ? workspaceConfig[session.activeWorkspace].label : "Вход";
+  const title = session ? workspaceConfig[session.activeWorkspace].label : "Вход";
   const subtitle = session ? session.email : "Тестовая авторизация";
 
   return (
     <header className="workspace-topbar">
       <div>
         <span className="topbar-kicker">Deshar</span>
-        {session?.activeWorkspace === "student" ? null : <strong>{title}</strong>}
+        <strong>{title}</strong>
       </div>
       <span className="topbar-user">{subtitle}</span>
     </header>
