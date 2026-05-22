@@ -77,7 +77,7 @@
 
 Статус:
 
-активный stage.
+завершен, PR #53.
 
 Цель:
 
@@ -97,7 +97,30 @@
 
 финальный redesign выполняется отдельным stage после production auth, чтобы дизайн опирался на реальные экраны входа, приглашений, ролей и рабочих областей.
 
-### Release Stage 4. Production Hardening
+### Release Stage 4. New Visual Design
+
+Статус:
+
+активный stage.
+
+Цель:
+
+сделать новый цельный визуальный дизайн приложения после production auth и
+предыдущего polish-stage.
+
+Входит:
+
+- новый визуальный язык для `/login`, app-shell и рабочих областей;
+- пересмотр фона, навигации, панелей, таблиц, форм, кнопок, статусов и loading states;
+- единый вид для администратора, преподавателя и ученика;
+- mobile/desktop проверка ключевых экранов;
+- сохранение текущей бизнес-логики, маршрутов, ролей и data-layer.
+
+### Release Stage 5. Production Hardening
+
+Статус:
+
+запланирован после `New Visual Design`.
 
 Цель:
 
@@ -111,7 +134,7 @@
 - проверка service-role/server-only ограничений;
 - обновление release limitations.
 
-### Release Stage 5. Release Candidate Smoke And Notes
+### Release Stage 6. Release Candidate Smoke And Notes
 
 Цель:
 
@@ -129,4 +152,4 @@
 
 Следующий кодовый stage:
 
-`Final Design System And UX Polish`
+`New Visual Design`

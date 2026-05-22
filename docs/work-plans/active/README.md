@@ -4,11 +4,11 @@
 
 Текущий активный технический план:
 
-`31-final-design-system-ux-polish-plan.md`
+`32-new-visual-design-plan.md`
 
 Завершенный предыдущий stage:
 
-`../completed/30-auth-stage-5-auth-smoke-hardening-plan.md`
+`../completed/31-final-design-system-ux-polish-plan.md`
 
 Codex перед разработкой должен читать:
 

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="960" viewBox="0 0 1440 960">
+  <rect width="1440" height="960" fill="#f8f5ef"/>
+  <rect x="50" y="48" width="1340" height="864" rx="36" fill="#fffdf8" stroke="#dfd7c8"/>
+  <rect x="86" y="84" width="230" height="792" rx="28" fill="#ede6d7"/>
+  <text x="124" y="144" fill="#25352f" font-family="Arial" font-size="34" font-weight="700">Deshar</text>
+  <text x="124" y="178" fill="#7b715f" font-family="Arial" font-size="16">администратор</text>
+  <rect x="118" y="236" width="166" height="44" rx="15" fill="#ffffff"/>
+  <text x="148" y="264" fill="#25352f" font-family="Arial" font-size="16" font-weight="700">Обзор</text>
+  <text x="128" y="332" fill="#716b60" font-family="Arial" font-size="16">Курсы</text>
+  <text x="128" y="382" fill="#716b60" font-family="Arial" font-size="16">Группы</text>
+  <text x="128" y="432" fill="#716b60" font-family="Arial" font-size="16">Ученики</text>
+  <text x="128" y="482" fill="#716b60" font-family="Arial" font-size="16">Оплата</text>
+  <text x="370" y="138" fill="#23352f" font-family="Arial" font-size="40" font-weight="700">Сегодня в школе</text>
+  <text x="370" y="176" fill="#786f62" font-family="Arial" font-size="18">шелковая теплая система для админских списков</text>
+  <rect x="370" y="232" width="942" height="148" rx="28" fill="#25352f"/>
+  <text x="414" y="288" fill="#f5e6c8" font-family="Arial" font-size="18">операционный статус</text>
+  <text x="414" y="334" fill="#ffffff" font-family="Arial" font-size="32" font-weight="700">14 групп, 126 учеников, 3 платежа требуют внимания</text>
+  <rect x="370" y="422" width="286" height="160" rx="24" fill="#fff8e8" stroke="#eadfc7"/>
+  <rect x="690" y="422" width="286" height="160" rx="24" fill="#edf2eb" stroke="#d9e1d6"/>
+  <rect x="1010" y="422" width="302" height="160" rx="24" fill="#f1e9e6" stroke="#e4d6d0"/>
+  <text x="406" y="482" fill="#7a6644" font-family="Arial" font-size="16">Оплата</text>
+  <text x="406" y="532" fill="#25352f" font-family="Arial" font-size="42" font-weight="700">3</text>
+  <text x="726" y="482" fill="#5e715f" font-family="Arial" font-size="16">Активные ученики</text>
+  <text x="726" y="532" fill="#25352f" font-family="Arial" font-size="42" font-weight="700">126</text>
+  <text x="1046" y="482" fill="#7c5d55" font-family="Arial" font-size="16">Новые приглашения</text>
+  <text x="1046" y="532" fill="#25352f" font-family="Arial" font-size="42" font-weight="700">9</text>
+  <rect x="370" y="626" width="942" height="188" rx="24" fill="#ffffff" stroke="#e3d9ca"/>
+  <text x="410" y="682" fill="#25352f" font-family="Arial" font-size="26" font-weight="700">Список учеников</text>
+  <line x1="410" y1="714" x2="1272" y2="714" stroke="#ebe3d6"/>
+  <text x="410" y="766" fill="#25352f" font-family="Arial" font-size="18">Марьям А.</text>
+  <text x="700" y="766" fill="#25352f" font-family="Arial" font-size="18">Коран B</text>
+  <rect x="980" y="742" width="122" height="34" rx="17" fill="#edf2eb"/>
+  <text x="1008" y="765" fill="#2c4b37" font-family="Arial" font-size="14">активен</text>
+  <text x="86" y="900" fill="#786f62" font-family="Arial" font-size="15">Вариант 05: теплый шелковый admin, аккуратно и немного премиально</text>
+</svg>

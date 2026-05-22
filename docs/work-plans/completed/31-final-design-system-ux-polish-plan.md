@@ -2,7 +2,7 @@
 
 ## 0. Статус
 
-- Статус плана: активный кодовый stage.
+- Статус плана: завершен, PR #53.
 - Большой блок: `Release 1.0`.
 - Stage релиза: `Release Stage 3. Final Design System And UX Polish`.
 - Планируемая ветка: `feat/final-design-system-ux-polish`.

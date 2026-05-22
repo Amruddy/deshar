@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Deshar design map</title>
+    <style>
+      :root {
+        --bg: #eef3ed;
+        --surface: #fffdf8;
+        --surface-soft: #f7f8f3;
+        --surface-green: #e8f1e8;
+        --surface-amber: #fff3d1;
+        --surface-blue: #eef4fb;
+        --surface-red: #f5e8e3;
+        --ink: #17231f;
+        --muted: #65736d;
+        --line: #d9e0d7;
+        --brand: #1f4a3d;
+        --brand-2: #263b35;
+        --amber: #72551c;
+        --blue: #2e5572;
+        --red: #7a4539;
+        --ok: #28513a;
+        --radius-lg: 28px;
+        --radius-md: 18px;
+        --radius-sm: 12px;
+        --shadow: 0 24px 70px rgba(31, 74, 61, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          Inter, Arial, "Helvetica Neue", sans-serif;
+      }
+
+      .map-shell {
+        display: grid;
+        gap: 24px;
+        grid-template-columns: 280px minmax(0, 1fr);
+        min-height: 100vh;
+        padding: 24px;
+      }
+
+      .sidebar {
+        background: rgba(255, 253, 248, 0.94);
+        border: 1px solid var(--line);
+        border-radius: 32px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+        position: sticky;
+        top: 24px;
+        height: calc(100vh - 48px);
+      }
+
+      .brand {
+        display: grid;
+        gap: 6px;
+        margin-bottom: 32px;
+      }
+
+      .brand strong {
+        color: var(--brand);
+        font-size: 30px;
+        letter-spacing: 0;
+      }
+
+      .brand span,
+      .section-kicker,
+      .muted {
+        color: var(--muted);
+      }
+
+      .nav {
+        display: grid;
+        gap: 8px;
+      }
+
+      .nav a {
+        border-radius: 16px;
+        color: #42564e;
+        padding: 13px 14px;
+        text-decoration: none;
+      }
+
+      .nav a.active {
+        background: var(--brand);
+        color: #fff;
+      }
+
+      .main {
+        display: grid;
+        gap: 24px;
+      }
+
+      .hero {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 34px;
+        box-shadow: var(--shadow);
+        display: grid;
+        gap: 24px;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        padding: 34px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 42px;
+        line-height: 1.05;
+      }
+
+      h2 {
+        font-size: 26px;
+        line-height: 1.15;
+      }
+
+      h3 {
+        font-size: 18px;
+      }
+
+      .section {
+        background: rgba(255, 253, 248, 0.86);
+        border: 1px solid var(--line);
+        border-radius: 30px;
+        padding: 28px;
+      }
+
+      .section-head {
+        align-items: end;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        margin-bottom: 22px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .grid.cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid.cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .grid.cols-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .panel,
+      .card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        padding: 22px;
+      }
+
+      .metric {
+        min-height: 128px;
+      }
+
+      .metric span {
+        color: var(--muted);
+        display: block;
+        font-size: 14px;
+        margin-bottom: 18px;
+      }
+
+      .metric strong {
+        color: var(--brand-2);
+        display: block;
+        font-size: 38px;
+      }
+
+      .button-row,
+      .badge-row {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      button,
+      .button {
+        align-items: center;
+        border: 1px solid transparent;
+        border-radius: 16px;
+        cursor: default;
+        display: inline-flex;
+        font: inherit;
+        font-weight: 700;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 18px;
+        text-decoration: none;
+      }
+
+      .button.primary {
+        background: var(--brand);
+        color: #fff;
+      }
+
+      .button.secondary {
+        background: #fff;
+        border-color: var(--line);
+        color: var(--brand);
+      }
+
+      .button.ghost {
+        background: transparent;
+        color: var(--brand);
+      }
+
+      .button.danger {
+        background: var(--surface-red);
+        color: var(--red);
+      }
+
+      .badge {
+        border-radius: 999px;
+        display: inline-flex;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 8px 12px;
+      }
+
+      .badge.ok {
+        background: #dfeee4;
+        color: var(--ok);
+      }
+
+      .badge.warn {
+        background: var(--surface-amber);
+        color: var(--amber);
+      }
+
+      .badge.info {
+        background: var(--surface-blue);
+        color: var(--blue);
+      }
+
+      .badge.danger {
+        background: var(--surface-red);
+        color: var(--red);
+      }
+
+      .field-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      label {
+        color: #40524a;
+        display: grid;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      input,
+      select,
+      textarea {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        color: var(--ink);
+        font: inherit;
+        min-height: 44px;
+        padding: 0 14px;
+      }
+
+      textarea {
+        min-height: 96px;
+        padding-top: 12px;
+      }
+
+      .table-wrap {
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        overflow: hidden;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid #e8ede6;
+        padding: 16px 18px;
+        text-align: left;
+      }
+
+      th {
+        background: var(--surface-soft);
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      td {
+        color: #273832;
+        font-size: 15px;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .state {
+        align-items: flex-start;
+        display: grid;
+        gap: 10px;
+        min-height: 150px;
+      }
+
+      .state strong {
+        font-size: 20px;
+      }
+
+      .loading-line {
+        background: linear-gradient(90deg, #e9eee7, #f7f8f3, #e9eee7);
+        border-radius: 999px;
+        height: 14px;
+      }
+
+      .login-preview {
+        background: var(--brand-2);
+        border-radius: 28px;
+        color: #fff;
+        display: grid;
+        gap: 16px;
+        padding: 26px;
+      }
+
+      .role-card {
+        display: grid;
+        gap: 14px;
+        min-height: 210px;
+      }
+
+      .role-card.admin {
+        background: #fff8e8;
+      }
+
+      .role-card.teacher {
+        background: #e8f1e8;
+      }
+
+      .role-card.student {
+        background: #eef4fb;
+      }
+
+      .mobile-frame {
+        background: #1e2f2a;
+        border-radius: 38px;
+        margin: 0 auto;
+        max-width: 330px;
+        padding: 18px;
+      }
+
+      .mobile-screen {
+        background: #f8faf7;
+        border-radius: 28px;
+        display: grid;
+        gap: 14px;
+        min-height: 560px;
+        padding: 24px;
+      }
+
+      .mobile-nav {
+        align-items: center;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        display: flex;
+        justify-content: space-around;
+        margin-top: auto;
+        min-height: 56px;
+      }
+
+      .dot {
+        background: var(--brand);
+        border-radius: 50%;
+        height: 10px;
+        width: 10px;
+      }
+
+      .dot.off {
+        background: #aab5ae;
+      }
+
+      @media (max-width: 980px) {
+        .map-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          height: auto;
+          position: static;
+        }
+
+        .hero,
+        .grid.cols-2,
+        .grid.cols-3,
+        .grid.cols-4 {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="map-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <strong>Deshar</strong>
+          <span>design map</span>
+        </div>
+        <nav class="nav">
+          <a class="active" href="#shell">App shell</a>
+          <a href="#buttons">Кнопки и статусы</a>
+          <a href="journal-map.html">Журнал</a>
+          <a href="#forms">Формы</a>
+          <a href="#tables">Таблицы</a>
+          <a href="#states">Состояния</a>
+          <a href="#roles">Роли</a>
+          <a href="#mobile">Mobile</a>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <section class="hero" id="shell">
+          <div>
+            <p class="section-kicker">Release 1.0 · New Visual Design</p>
+            <h1>Единая рабочая система для школы</h1>
+            <p class="muted" style="max-width: 680px; margin-top: 16px">
+              Новый дизайн должен быть спокойным, плотным и понятным. Это карта элементов,
+              из которых будут собираться админская, преподавательская и ученическая области.
+            </p>
+            <div class="button-row" style="margin-top: 26px">
+              <a class="button primary" href="journal-map.html">Открыть журнал</a>
+              <span class="button secondary">Добавить ученика</span>
+              <span class="button ghost">Подробнее</span>
+            </div>
+          </div>
+          <div class="login-preview">
+            <h2>Вход</h2>
+            <p style="color: #d7e3dd">Email, пароль, восстановление и dev-вход только при флаге.</p>
+            <input aria-label="email" placeholder="email" />
+            <input aria-label="password" placeholder="пароль" />
+            <span class="button primary" style="background:#f1c85f;color:#1e2f2a">Войти</span>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">Metrics</p>
+              <h2>Карточки показателей</h2>
+            </div>
+          </div>
+          <div class="grid cols-4">
+            <div class="panel metric"><span>Курсы</span><strong>8</strong><p class="muted">активная база</p></div>
+            <div class="panel metric"><span>Группы</span><strong>14</strong><p class="muted">в расписании</p></div>
+            <div class="panel metric"><span>Ученики</span><strong>126</strong><p class="muted">учебные карточки</p></div>
+            <div class="panel metric"><span>Оплата</span><strong>3</strong><p class="muted">требуют внимания</p></div>
+          </div>
+        </section>
+
+        <section class="section" id="buttons">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">Actions</p>
+              <h2>Кнопки и статусы</h2>
+            </div>
+          </div>
+          <div class="grid cols-2">
+            <div class="panel">
+              <h3>Кнопки</h3>
+              <div class="button-row" style="margin-top: 16px">
+                <span class="button primary">Сохранить</span>
+                <span class="button secondary">Отмена</span>
+                <span class="button ghost">Фильтр</span>
+                <span class="button danger">Отключить</span>
+              </div>
+            </div>
+            <div class="panel">
+              <h3>Статусы</h3>
+              <div class="badge-row" style="margin-top: 16px">
+                <span class="badge ok">активен</span>
+                <span class="badge warn">ожидает оплаты</span>
+                <span class="badge info">приглашен</span>
+                <span class="badge danger">отключен</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="forms">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">Forms</p>
+              <h2>Формы и поля</h2>
+            </div>
+          </div>
+          <div class="grid cols-2">
+            <div class="panel field-grid">
+              <label>Имя ученика<input value="Амина С." /></label>
+              <label>Группа<select><option>Таджвид A</option><option>Коран B</option></select></label>
+              <label>Комментарий<textarea>Повторить правило мадда.</textarea></label>
+              <div class="button-row"><span class="button primary">Сохранить</span><span class="button secondary">Закрыть</span></div>
+            </div>
+            <div class="panel">
+              <h3>Фильтры списка</h3>
+              <div class="field-grid" style="margin-top: 16px">
+                <label>Поиск<input placeholder="Имя, телефон, email" /></label>
+                <label>Статус<select><option>Все статусы</option><option>Активные</option></select></label>
+                <label>Период<select><option>Этот месяц</option></select></label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="tables">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">Data table</p>
+              <h2>Таблица учеников и оплат</h2>
+            </div>
+            <span class="button secondary">Экспорт не нужен</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Ученик</th><th>Группа</th><th>Контакты</th><th>Оплата</th><th>Статус</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Амина С.</td><td>Таджвид A</td><td>amina@mail.test</td><td><span class="badge warn">ожидает</span></td><td><span class="badge ok">активен</span></td></tr>
+                <tr><td>Юсуф М.</td><td>Коран B</td><td>yusuf@mail.test</td><td><span class="badge ok">оплачено</span></td><td><span class="badge ok">активен</span></td></tr>
+                <tr><td>Марьям А.</td><td>Индивидуально</td><td>maryam@mail.test</td><td><span class="badge danger">просрочено</span></td><td><span class="badge info">приглашен</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section" id="states">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">System states</p>
+              <h2>Empty, error, loading</h2>
+            </div>
+          </div>
+          <div class="grid cols-3">
+            <div class="panel state"><span class="badge info">empty</span><strong>Пока пусто</strong><p class="muted">Здесь появятся материалы после добавления преподавателем.</p></div>
+            <div class="panel state"><span class="badge danger">error</span><strong>Не удалось загрузить данные</strong><p class="muted">Раздел временно не загрузился. Повторите действие.</p></div>
+            <div class="panel state"><span class="badge warn">loading</span><strong>Загрузка</strong><div class="loading-line"></div><div class="loading-line" style="width:72%"></div><div class="loading-line" style="width:54%"></div></div>
+          </div>
+        </section>
+
+        <section class="section" id="roles">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">Role dashboards</p>
+              <h2>Админ, преподаватель, ученик</h2>
+            </div>
+          </div>
+          <div class="grid cols-3">
+            <div class="card role-card admin">
+              <span class="badge warn">admin</span>
+              <h3>Сегодня в школе</h3>
+              <p class="muted">Курсы, группы, ученики, преподаватели, оплата к вниманию.</p>
+              <span class="button secondary">Открыть учеников</span>
+            </div>
+            <div class="card role-card teacher">
+              <span class="badge ok">teacher</span>
+              <h3>Следующий урок</h3>
+              <p class="muted">Быстрый переход в журнал, домашние задания и материалы.</p>
+              <span class="button secondary">Открыть журнал</span>
+            </div>
+            <div class="card role-card student">
+              <span class="badge info">student</span>
+              <h3>Мой учебный день</h3>
+              <p class="muted">Расписание, домашнее задание, материалы, прогресс и оплата.</p>
+              <span class="button secondary">Открыть домашнее</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="mobile">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">Mobile</p>
+              <h2>Мобильная сборка элементов</h2>
+            </div>
+          </div>
+          <div class="mobile-frame">
+            <div class="mobile-screen">
+              <h2>Сегодня</h2>
+              <div class="card" style="background:var(--brand-2);color:#fff">
+                <p style="color:#d7e3dd">следующий урок</p>
+                <h3>Таджвид A</h3>
+                <p style="color:#d7e3dd">16:00 · 12 учеников</p>
+              </div>
+              <div class="card"><h3>Домашнее</h3><p class="muted">2 задания</p></div>
+              <div class="card"><h3>Материалы</h3><p class="muted">5 ссылок</p></div>
+              <div class="mobile-nav"><span class="dot"></span><span class="dot off"></span><span class="dot off"></span></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

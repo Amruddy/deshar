@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="960" viewBox="0 0 1440 960">
+  <rect width="1440" height="960" fill="#f7f6f1"/>
+  <rect x="64" y="54" width="1312" height="852" rx="38" fill="#fcfbf7" stroke="#d8d4c9"/>
+  <rect x="104" y="96" width="1232" height="108" rx="30" fill="#efece2"/>
+  <text x="148" y="162" fill="#202d29" font-family="Arial" font-size="34" font-weight="700">Deshar</text>
+  <text x="312" y="162" fill="#6c6658" font-family="Arial" font-size="18">единая система школы</text>
+  <rect x="1128" y="126" width="156" height="44" rx="22" fill="#202d29"/>
+  <text x="1170" y="154" fill="#ffffff" font-family="Arial" font-size="15" font-weight="700">Профиль</text>
+  <rect x="104" y="248" width="300" height="566" rx="30" fill="#202d29"/>
+  <text x="146" y="314" fill="#ffffff" font-family="Arial" font-size="27" font-weight="700">Навигация</text>
+  <rect x="146" y="362" width="216" height="46" rx="16" fill="#35463f"/>
+  <text x="176" y="391" fill="#ffffff" font-family="Arial" font-size="16">Главная</text>
+  <text x="156" y="464" fill="#ced8d1" font-family="Arial" font-size="16">Ученики</text>
+  <text x="156" y="514" fill="#ced8d1" font-family="Arial" font-size="16">Группы</text>
+  <text x="156" y="564" fill="#ced8d1" font-family="Arial" font-size="16">Журнал</text>
+  <text x="156" y="614" fill="#ced8d1" font-family="Arial" font-size="16">Оплата</text>
+  <rect x="444" y="248" width="892" height="220" rx="30" fill="#ffffff" stroke="#d8d4c9"/>
+  <text x="490" y="314" fill="#202d29" font-family="Arial" font-size="38" font-weight="700">Спокойная операционная панель</text>
+  <text x="490" y="356" fill="#706b61" font-family="Arial" font-size="19">визуально дорого, но без лишнего декора</text>
+  <rect x="490" y="392" width="150" height="44" rx="22" fill="#202d29"/>
+  <text x="522" y="420" fill="#ffffff" font-family="Arial" font-size="15">Открыть</text>
+  <rect x="444" y="504" width="268" height="166" rx="28" fill="#f0efe8"/>
+  <rect x="756" y="504" width="268" height="166" rx="28" fill="#ecf1eb"/>
+  <rect x="1068" y="504" width="268" height="166" rx="28" fill="#f4eadf"/>
+  <text x="484" y="568" fill="#706b61" font-family="Arial" font-size="16">Рабочих групп</text>
+  <text x="484" y="622" fill="#202d29" font-family="Arial" font-size="46" font-weight="700">14</text>
+  <text x="796" y="568" fill="#627165" font-family="Arial" font-size="16">Ученики</text>
+  <text x="796" y="622" fill="#202d29" font-family="Arial" font-size="46" font-weight="700">126</text>
+  <text x="1108" y="568" fill="#776253" font-family="Arial" font-size="16">Внимание</text>
+  <text x="1108" y="622" fill="#202d29" font-family="Arial" font-size="46" font-weight="700">3</text>
+  <rect x="444" y="706" width="892" height="108" rx="28" fill="#ffffff" stroke="#d8d4c9"/>
+  <text x="486" y="768" fill="#202d29" font-family="Arial" font-size="24" font-weight="700">Таблицы, формы и статусы используют одну систему</text>
+  <rect x="1110" y="740" width="154" height="40" rx="20" fill="#e2eadf"/>
+  <text x="1148" y="766" fill="#294435" font-family="Arial" font-size="14">готово</text>
+  <text x="104" y="866" fill="#706b61" font-family="Arial" font-size="15">Вариант 10: тихий premium, минимум цветов, больше воздуха и доверия</text>
+</svg>
