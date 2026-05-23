@@ -5,6 +5,8 @@
 Документ фиксирует состояние stage `Release Candidate Smoke And Notes` в рамках
 `Release 1.0`.
 
+Статус stage: завершен и смержен в `main` через PR #59.
+
 Рабочая ветка stage:
 
 `feat/release-candidate-smoke-notes`
@@ -83,7 +85,7 @@
 
 ## 5. Release notes
 
-`Release 1.0` готовится как рабочий release candidate для школы таджвида:
+`Release 1.0` зафиксирован как рабочий release candidate для школы таджвида:
 
 - production auth через Supabase Auth заменяет dev-only вход для реального
   использования;
@@ -94,8 +96,9 @@
 - ученик видит расписание, домашние задания, материалы, прогресс,
   посещаемость и оплату;
 - интерфейс приведен к единой Release 1.0 дизайн-системе;
-- основные role/auth smoke-проверки проходят локально на release-candidate
+- основные role/auth smoke-проверки прошли локально на release-candidate
   ветке.
 
-Следующий ожидаемый шаг после ручной проверки: commit и push ветки
-`feat/release-candidate-smoke-notes` для pull request.
+Следующий ожидаемый шаг после merge PR #59: отдельный stage
+`Release 1.0 Performance Baseline And Supabase Optimization` для baseline
+быстродействия сайта и Supabase-запросов.

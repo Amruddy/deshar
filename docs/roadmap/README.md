@@ -18,13 +18,14 @@
 ## 1. Текущий статус
 
 - Текущий большой блок: `Release 1.0`.
-- Последний завершенный кодовый stage: `Production Hardening`, PR #57.
-- Активный stage: `Release Candidate Smoke And Notes`.
-- Активный план: `docs/work-plans/active/35-release-candidate-smoke-and-notes-plan.md`.
-- Первый блок active stage: рабочий журнал и сводная посещаемость преподавателя.
+- Последний завершенный кодовый stage: `Release Candidate Smoke And Notes`, PR #59.
+- Активный stage: не выбран.
+- Активный план: не выбран.
+- Следующий ожидаемый stage: `Release 1.0 Performance Baseline And Supabase Optimization`.
 - Предыдущий блок: `MPMF 1.0`, завершен и смержен в `main`.
 - Запись завершения MPMF 1.0: `docs/release/mpmf-1-release-readiness.md`.
 - Запись завершения Production Hardening: `docs/release/release-1-production-hardening.md`.
+- Запись release candidate: `docs/release/release-1-release-candidate.md`.
 
 ## 2. Правило перехода между этапами
 
@@ -77,15 +78,18 @@ Roadmap:
 - реальные email-приглашения преподавателей и учеников;
 - связь auth-пользователя с `users`, ролями, организацией и карточкой ученика;
 - финальный UI/UX redesign после production auth;
-- production hardening и release candidate smoke.
+- production hardening и release candidate smoke;
+- performance baseline и оптимизация Supabase-запросов перед runtime-оптимизациями.
 
 Важное решение:
 
-финальный дизайн входит в `Release 1.0` как отдельный обязательный stage после production auth. Текущий UI не считается финальным.
+финальный дизайн уже вошел в `Release 1.0` отдельными design stages после
+production auth. Будущие изменения UI должны проходить через отдельные
+design/performance stages и не смешиваться с правками модели данных.
 
 ## 5. Следующий подплан
 
-### Release Candidate Smoke And Notes
+### Release 1.0 Performance Baseline And Supabase Optimization
 
 Roadmap:
 
@@ -93,11 +97,14 @@ Roadmap:
 
 Активный stage:
 
-`Release Candidate Smoke And Notes`
+не выбран.
 
-Активный work plan:
+Следующий ожидаемый stage:
 
-`docs/work-plans/active/35-release-candidate-smoke-and-notes-plan.md`
+`Release 1.0 Performance Baseline And Supabase Optimization`
+
+Перед runtime-оптимизациями нужно создать отдельный active work plan от
+актуального `main`.
 
 ## 6. Следующие крупные stages Release 1.0
 
@@ -109,4 +116,6 @@ Roadmap:
 6. `New Visual Design`.
 7. `Functional UX Fixes Before Hardening`.
 8. `Production Hardening` - завершен, PR #57.
-9. `Release Candidate Smoke And Notes` - следующий ожидаемый stage.
+9. `Release Candidate Smoke And Notes` - завершен, PR #59.
+10. `Release 1.0 Performance Baseline And Supabase Optimization` - следующий
+    ожидаемый stage.

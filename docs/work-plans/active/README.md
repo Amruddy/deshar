@@ -4,19 +4,19 @@
 
 Текущий активный технический план:
 
-`35-release-candidate-smoke-and-notes-plan.md`
+не выбран.
 
 Последний завершенный stage:
 
-`../completed/34-production-hardening-plan.md`
+`../completed/35-release-candidate-smoke-and-notes-plan.md`
 
 Следующий ожидаемый stage:
 
-`Release Candidate Smoke And Notes`
+`Release 1.0 Performance Baseline And Supabase Optimization`
 
-Первый блок активного stage:
+Первый ожидаемый блок следующего stage:
 
-рабочий журнал и сводная посещаемость преподавателя.
+baseline быстродействия, Supabase-запросов и тяжелых маршрутов.
 
 Codex перед разработкой должен читать:
 
@@ -25,4 +25,5 @@ Codex перед разработкой должен читать:
 - `docs/roadmap/README.md`;
 - связанные спецификации из `docs/specs/`.
 
-Если в этой папке появится несколько планов, в README нужно явно указать, какой из них активен сейчас.
+Перед началом runtime-оптимизаций нужно создать отдельный active plan для
+performance stage и начинать работу от актуального `main`.

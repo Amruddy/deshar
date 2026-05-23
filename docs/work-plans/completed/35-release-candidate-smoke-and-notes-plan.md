@@ -2,15 +2,17 @@
 
 ## 0. Статус
 
-- Статус плана: активен.
+- Статус плана: завершен, PR #59.
 - Большой блок: `Release 1.0`.
 - Stage релиза: `Release Stage 7. Release Candidate Smoke And Notes`.
 - Рабочая ветка: `feat/release-candidate-smoke-notes`.
+- Коммит stage: `27b765e` (`Document release candidate smoke notes`).
+- Merge-коммит: `3887c7e` (`Merge pull request #59 from Amruddy/feat/release-candidate-smoke-notes`).
 - Предыдущий завершенный plan: `../completed/34-production-hardening-plan.md`.
 - Roadmap релиза: `docs/roadmap/release-1-roadmap.md`.
 - Первый blocker по журналу и посещаемости закрыт в PR #58
   (`fix/teacher-attendance-journal`).
-- Текущий блок: финальный release-candidate smoke и release notes.
+- Release-документ: `docs/release/release-1-release-candidate.md`.
 
 ## 1. Цель
 
@@ -121,5 +123,6 @@
 
 ## 7. Следующий шаг
 
-После закрытия blocker по журналу и посещаемости продолжить полный
-`Release Candidate Smoke And Notes`.
+После merge этого stage:
+
+`Release 1.0 Performance Baseline And Supabase Optimization`

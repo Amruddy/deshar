@@ -25,7 +25,9 @@
 - Не смешивать крупные направления в одном stage.
 - Сначала завершить реальные аккаунты и auth-flow.
 - После auth-flow выполнить отдельный финальный UI/UX redesign.
-- Не считать текущий UI финальным: шрифты, размеры, плотность блоков, таблицы, кнопки, карточки и навигация должны быть отдельно пересмотрены.
+- Завершенные design stages считаются текущей Release 1.0 визуальной основой;
+  новые UI-изменения должны идти отдельным plan и не смешиваться с auth,
+  hardening или performance-правками.
 - Каждый stage должен иметь work plan, проверки, commit, push и историю в completed plans.
 
 ## 4. Stages Release 1.0
@@ -171,7 +173,7 @@
 
 Статус:
 
-активный stage.
+завершен, PR #59.
 
 Цель:
 
@@ -187,8 +189,40 @@
 - список известных ограничений;
 - финальные release notes.
 
+Результат:
+
+- role/auth smoke Release 1.0 зафиксирован в release notes;
+- рабочий журнал и сводная посещаемость преподавателя закрыты ранее в PR #58;
+- release candidate notes сохранены в `docs/release/release-1-release-candidate.md`.
+
+### Release Stage 8. Performance Baseline And Supabase Optimization
+
+Статус:
+
+следующий ожидаемый stage, active plan еще не выбран.
+
+Цель:
+
+зафиксировать baseline быстродействия сайта, выявить тяжелые Supabase-запросы и
+подготовить точечные оптимизации без изменения бизнес-логики Release 1.0.
+
+Входит:
+
+- измерение ключевых маршрутов и server actions;
+- аудит Supabase-запросов, N+1, лишних round-trip и тяжелых списков;
+- индексы, pagination, projection и кеширование только после зафиксированного
+  baseline;
+- сохранение server-side authorization и текущих границ production auth.
+
+Не входит:
+
+- новая продуктовая функциональность;
+- смена auth-flow;
+- browser-side прямое чтение Supabase без отдельного RLS/security stage;
+- массовая переработка схемы данных без отдельного плана.
+
 ## 5. Следующий stage
 
 Следующий кодовый stage:
 
-`Release Candidate Smoke And Notes`
+`Release 1.0 Performance Baseline And Supabase Optimization`
