@@ -4,15 +4,24 @@
 
 Текущий активный технический план:
 
-`34-production-hardening-plan.md`
+`35-release-candidate-smoke-and-notes-plan.md`
 
-Завершенный предыдущий stage:
+Последний завершенный stage:
 
-`../completed/33-functional-ux-fixes-before-hardening-plan.md`
+`../completed/34-production-hardening-plan.md`
+
+Следующий ожидаемый stage:
+
+`Release Candidate Smoke And Notes`
+
+Первый блок активного stage:
+
+рабочий журнал и сводная посещаемость преподавателя.
 
 Codex перед разработкой должен читать:
 
-- текущий активный план;
+- текущий active README;
+- активный план, если он выбран;
 - `docs/roadmap/README.md`;
 - связанные спецификации из `docs/specs/`.
 

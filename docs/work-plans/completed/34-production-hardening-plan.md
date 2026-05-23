@@ -2,12 +2,14 @@
 
 ## 0. Статус
 
-- Статус плана: активный кодовый stage.
+- Статус плана: завершен, PR #57.
 - Большой блок: `Release 1.0`.
 - Stage релиза: `Release Stage 6. Production Hardening`.
-- Планируемая ветка: `feat/production-hardening`.
+- Рабочая ветка: `feat/production-hardening`.
+- Коммит stage: `ecab69d` (`Harden release 1 production readiness`).
 - Roadmap релиза: `docs/roadmap/release-1-roadmap.md`.
 - Предыдущий завершенный plan: `docs/work-plans/completed/33-functional-ux-fixes-before-hardening-plan.md`.
+- Release-документ: `docs/release/release-1-production-hardening.md`.
 
 ## 1. Цель
 

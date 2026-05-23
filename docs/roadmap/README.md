@@ -18,12 +18,13 @@
 ## 1. Текущий статус
 
 - Текущий большой блок: `Release 1.0`.
-- Последний завершенный кодовый stage: `Functional UX Fixes Before Hardening`, PR #56.
-- Активный stage: `Production Hardening`.
-- Активный план: `docs/work-plans/active/34-production-hardening-plan.md`.
-- Планируемая ветка текущего кодового stage: `feat/production-hardening`.
+- Последний завершенный кодовый stage: `Production Hardening`, PR #57.
+- Активный stage: `Release Candidate Smoke And Notes`.
+- Активный план: `docs/work-plans/active/35-release-candidate-smoke-and-notes-plan.md`.
+- Первый блок active stage: рабочий журнал и сводная посещаемость преподавателя.
 - Предыдущий блок: `MPMF 1.0`, завершен и смержен в `main`.
 - Запись завершения MPMF 1.0: `docs/release/mpmf-1-release-readiness.md`.
+- Запись завершения Production Hardening: `docs/release/release-1-production-hardening.md`.
 
 ## 2. Правило перехода между этапами
 
@@ -82,9 +83,9 @@ Roadmap:
 
 финальный дизайн входит в `Release 1.0` как отдельный обязательный stage после production auth. Текущий UI не считается финальным.
 
-## 5. Активный подплан
+## 5. Следующий подплан
 
-### Production Hardening
+### Release Candidate Smoke And Notes
 
 Roadmap:
 
@@ -92,15 +93,11 @@ Roadmap:
 
 Активный stage:
 
-`Production Hardening`
+`Release Candidate Smoke And Notes`
 
 Активный work plan:
 
-`docs/work-plans/active/34-production-hardening-plan.md`
-
-После него:
-
-`Release Candidate Smoke And Notes`
+`docs/work-plans/active/35-release-candidate-smoke-and-notes-plan.md`
 
 ## 6. Следующие крупные stages Release 1.0
 
@@ -111,5 +108,5 @@ Roadmap:
 5. `Final Design System And UX Polish`.
 6. `New Visual Design`.
 7. `Functional UX Fixes Before Hardening`.
-8. `Production Hardening`.
-9. `Release Candidate Smoke And Notes`.
+8. `Production Hardening` - завершен, PR #57.
+9. `Release Candidate Smoke And Notes` - следующий ожидаемый stage.

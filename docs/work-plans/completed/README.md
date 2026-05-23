@@ -35,6 +35,7 @@
 - `31-final-design-system-ux-polish-plan.md` - финальный UI/UX polish после production auth: дизайн-система, плотность интерфейса, loading states, таблицы, формы и smoke hardening для Supabase error-state.
 - `32-new-visual-design-plan.md` - новый целостный визуальный дизайн приложения, project design skill и перенос реальных страниц на утвержденное визуальное направление.
 - `33-functional-ux-fixes-before-hardening-plan.md` - функциональные UX-фиксы перед hardening: журнал и расписание, ближайшие занятия преподавателя, отмена домашних заданий, архивирование групп, посещаемость ученика и точечные исправления таблиц.
+- `34-production-hardening-plan.md` - production hardening Release 1.0: env/config, закрытые маршруты, server-only/service-role границы, smoke-скрипты и release limitations.
 - `01-initial-product-implementation-plan.md` - исторический план первой рабочей реализации.
 - `02-system-a-ui-implementation-plan.md` - исторический план UI-направления System A.
 

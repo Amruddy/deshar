@@ -3,6 +3,7 @@ import { SupabaseDataPage } from "@/app/components/supabase-data-page";
 import { getTeacherGroupJournal } from "@/app/lib/data/supabase-read";
 import { requireWorkspace } from "@/app/lib/dev-auth";
 import { saveGroupJournal } from "@/app/teacher/actions";
+import { JournalGrid } from "./journal-grid";
 
 type TeacherGroupJournalPageProps = {
   params: Promise<{
@@ -26,8 +27,8 @@ export default async function TeacherGroupJournalPage({ params, searchParams }: 
 
   return (
     <SupabaseDataPage
-      title="Журнал группы"
-      description="Календарный журнал месяца: только реальные уроки группы, ученики и быстрые отметки посещаемости."
+      title="Журнал"
+      description="Ученики, уроки выбранного месяца, посещаемость и оценки."
       result={result}
     >
       {(data) => {
@@ -35,142 +36,62 @@ export default async function TeacherGroupJournalPage({ params, searchParams }: 
 
         return (
           <>
-            <section className="teacher-overview-grid">
-              <div className="panel teacher-main-panel">
-                <div className="section-heading">
-                  <div>
-                    <h2>{data.name}</h2>
-                    <p>
-                      {data.course}; {data.teacher}; {data.status}
-                    </p>
-                  </div>
-                  <Link className="secondary-button compact-button" href={`/teacher/groups/${data.id}`}>
-                    К группе
-                  </Link>
-                </div>
-
-                <div className="teacher-highlight">
-                  <span>Выбранный месяц</span>
-                  <strong>{data.monthLabel}</strong>
+            <section className="journal-toolbar">
+              <div className="journal-toolbar-main">
+                <div>
+                  <h2>{data.name}</h2>
                   <p>
-                    Уроков: {data.lessons.length}; учеников: {data.students.length}; сохраненных записей:{" "}
-                    {data.savedEntries}
+                    {data.course}; {data.teacher}; {data.status}
                   </p>
-                  <div className="button-row">
-                    <Link
-                      className="secondary-button compact-button"
-                      href={`/teacher/groups/${data.id}/journal?month=${data.previousMonth}`}
-                    >
-                      Предыдущий месяц
-                    </Link>
-                    <Link
-                      className="secondary-button compact-button"
-                      href={`/teacher/groups/${data.id}/journal?month=${data.nextMonth}`}
-                    >
-                      Следующий месяц
-                    </Link>
-                  </div>
                 </div>
+                <Link className="secondary-button compact-button" href={`/teacher/groups/${data.id}`}>
+                  К группе
+                </Link>
               </div>
 
-              <aside className="panel teacher-side-panel">
-                <h2>Обозначения</h2>
-                <div className="journal-legend">
-                  <span>П - присутствовал</span>
-                  <span>Н - отсутствовал</span>
-                  <span>У - уважительная причина</span>
-                  <span>Можно писать вручную: Н или n, У или u, либо оценку.</span>
-                  <span>Пусто после сохраненного прошедшего урока считается присутствием.</span>
-                </div>
-              </aside>
+              <div className="journal-month-bar">
+                <Link
+                  className="secondary-button compact-button"
+                  href={`/teacher/groups/${data.id}/journal?month=${data.previousMonth}`}
+                >
+                  Предыдущий месяц
+                </Link>
+                <strong>{data.monthLabel}</strong>
+                <Link
+                  className="secondary-button compact-button"
+                  href={`/teacher/groups/${data.id}/journal?month=${data.nextMonth}`}
+                >
+                  Следующий месяц
+                </Link>
+              </div>
+
+              <div className="journal-schedule-strip" data-empty={data.schedule.length === 0 ? "true" : undefined}>
+                <span>Расписание месяца</span>
+                {data.schedule.length > 0 ? (
+                  data.schedule.map((rule) => <strong key={rule}>{rule}</strong>)
+                ) : (
+                  <strong>Активное расписание не настроено</strong>
+                )}
+              </div>
             </section>
 
             <section className="journal-sheet section">
               <div className="section-heading">
                 <div>
-                  <h2>Таблица месяца</h2>
-                  <p>{data.monthLabel}</p>
+                  <h2>Журнал</h2>
+                  <p>
+                    {data.monthLabel}; уроков: {data.lessons.length}; учеников: {data.students.length}; записей:{" "}
+                    {data.savedEntries}
+                  </p>
                 </div>
               </div>
 
               {data.lessons.length === 0 ? (
-                <p className="empty-state">В выбранном месяце у группы нет созданных уроков.</p>
+                <p className="empty-state">В выбранном месяце у группы нет уроков по активному расписанию.</p>
               ) : data.students.length === 0 ? (
                 <p className="empty-state">В группе пока нет активных учеников для журнала.</p>
               ) : (
-                <form action={saveJournal} className="journal-form">
-                  <input name="month" type="hidden" value={data.monthValue} />
-                  <div className="journal-table-wrap">
-                    <table className="journal-table">
-                      <thead>
-                        <tr>
-                          <th className="journal-student-head">Ученик</th>
-                          {data.lessons.map((lesson) => (
-                            <th className={lesson.isWeekStart ? "week-start" : undefined} key={lesson.id}>
-                              <Link className="journal-lesson-link" href={`/teacher/lessons/${lesson.id}`}>
-                                <span>{lesson.weekday}</span>
-                                <strong>{lesson.day}</strong>
-                                <em>{lesson.timeRange}</em>
-                              </Link>
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.students.map((student) => (
-                          <tr key={student.id}>
-                            <th className="journal-student-name" scope="row">
-                              {student.name}
-                            </th>
-                            {data.lessons.map((lesson, lessonIndex) => {
-                              const cell = student.cells[lessonIndex];
-                              const inputId = `mark-${lesson.id}-${student.id}`;
-
-                              return (
-                                <td
-                                  className={lesson.isWeekStart ? "week-start" : undefined}
-                                  data-attendance={cell.attendanceTone}
-                                  data-label={`${lesson.weekday} ${lesson.day}, ${lesson.timeRange}`}
-                                  data-future={cell.isFuture ? "true" : undefined}
-                                  key={cell.id}
-                                >
-                                  <div className="journal-cell">
-                                    <label className="visually-hidden" htmlFor={inputId}>
-                                      {student.name}, {lesson.day}
-                                    </label>
-                                    <input
-                                      aria-label={`${student.name}, ${lesson.day}`}
-                                      className="journal-cell-input"
-                                      defaultValue={cell.markValue}
-                                      id={inputId}
-                                      maxLength={2}
-                                      name={`mark__${cell.lessonId}__${cell.studentId}`}
-                                      placeholder="-"
-                                    />
-                                    {cell.indicators.length > 0 ? (
-                                      <div className="journal-cell-meta">
-                                        {cell.indicators.map((indicator) => (
-                                          <span key={indicator}>{indicator}</span>
-                                        ))}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div className="journal-meta">
-                    <button className="button compact-button" type="submit">
-                      Сохранить журнал
-                    </button>
-                    <p>В ячейке можно написать П, Н/n, У/u или оценку по шкале курса. Детали урока остаются на странице урока.</p>
-                  </div>
-                </form>
+                <JournalGrid data={data} saveAction={saveJournal} />
               )}
             </section>
           </>

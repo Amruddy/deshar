@@ -42,7 +42,11 @@ const roles = [
       "/teacher",
       "/teacher/groups",
       "/teacher/students",
-      "/teacher/attendance",
+      {
+        includes: 'data-attendance-summary="ready"',
+        label: "/teacher/attendance",
+        path: "/teacher/attendance",
+      },
       "/teacher/homework",
       "/teacher/materials",
       "/teacher/payments",
@@ -90,8 +94,10 @@ for (const role of roles) {
 
   console.log(`\n${role.name}`);
 
-  for (const path of role.required) {
-    const result = await checkPath(role, path);
+  for (const required of role.required) {
+    const path = typeof required === "string" ? required : required.path;
+    const label = typeof required === "string" ? path : required.label ?? required.path;
+    const result = await checkPath(role, path, label, typeof required === "string" ? null : required.includes ?? null);
     cache.set(path, result.body);
   }
 
@@ -123,7 +129,7 @@ if (failures.length > 0) {
 
 console.log(`\nSmoke по ролям прошел. Проверено: ${checkedCount}. Пропущено динамических ссылок: ${skippedCount}.`);
 
-async function checkPath(role, path, label = path) {
+async function checkPath(role, path, label = path, includes = null) {
   try {
     const { body, location, status } = await requestPath(path, role.cookie);
     const redirectTarget = location ? locationPath(location) : redirectedPathFromBody(body);
@@ -145,6 +151,12 @@ async function checkPath(role, path, label = path) {
     if (supabaseDataState) {
       failures.push(`${role.name}: ${path} показал Supabase ${supabaseDataState} state`);
       console.log(`  [fail] ${label}: Supabase ${supabaseDataState} state`);
+      return { body };
+    }
+
+    if (includes && !body.includes(includes)) {
+      failures.push(`${role.name}: ${path} не содержит ожидаемый фрагмент ${includes}`);
+      console.log(`  [fail] ${label}: нет ожидаемого содержимого`);
       return { body };
     }
 
