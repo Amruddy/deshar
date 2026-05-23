@@ -147,7 +147,7 @@
 
 Статус:
 
-активный stage.
+завершен, PR #57.
 
 Цель:
 
@@ -161,7 +161,17 @@
 - проверка service-role/server-only ограничений;
 - обновление release limitations.
 
+Результат:
+
+- env/config hardening и server-only границы зафиксированы;
+- `smoke:roles` и `smoke:auth` актуализированы;
+- результат stage описан в `docs/release/release-1-production-hardening.md`.
+
 ### Release Stage 7. Release Candidate Smoke And Notes
+
+Статус:
+
+активный stage.
 
 Цель:
 
@@ -172,6 +182,8 @@
 - полный smoke admin/teacher/student;
 - auth smoke;
 - основные бизнес-сценарии: группы, журнал, прогресс, задания, оплаты;
+- первый release-candidate blocker: рабочий журнал и сводная посещаемость
+  преподавателя;
 - список известных ограничений;
 - финальные release notes.
 
@@ -179,4 +191,4 @@
 
 Следующий кодовый stage:
 
-`Production Hardening`
+`Release Candidate Smoke And Notes`

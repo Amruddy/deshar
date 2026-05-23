@@ -540,6 +540,48 @@ export type TeacherStudentItem = {
   payment: string;
 };
 
+export type TeacherAttendanceFilters = {
+  groupId?: string;
+  lowOnly?: boolean;
+  month?: string;
+  onlyAbsences?: boolean;
+};
+
+export type TeacherAttendanceRow = {
+  absent: string;
+  contacts: string;
+  context: string;
+  excused: string;
+  groupId: string;
+  id: string;
+  journalHref: string;
+  lastLesson: string;
+  lastLessonHref: string | null;
+  lessons: string;
+  name: string;
+  percent: string;
+  present: string;
+  status: string;
+  statusTone: "danger" | "neutral" | "ok" | "warning";
+  studentHref: string;
+};
+
+export type TeacherAttendanceData = {
+  activeFilters: {
+    groupId: string;
+    lowOnly: boolean;
+    month: string;
+    onlyAbsences: boolean;
+  };
+  groupOptions: SelectOption[];
+  lowThreshold: string;
+  metrics: MetricItem[];
+  monthLabel: string;
+  nextMonth: string;
+  previousMonth: string;
+  rows: TeacherAttendanceRow[];
+};
+
 export type ProgressRuleItem = {
   course: string;
   courseId: string;
@@ -735,6 +777,7 @@ export type TeacherGroupJournalData = {
   previousMonth: string;
   nextMonth: string;
   lessons: TeacherJournalLesson[];
+  schedule: string[];
   students: TeacherJournalStudent[];
   savedEntries: string;
 };
@@ -1028,6 +1071,30 @@ function moscowDateTimeIso(dateValue: string, timeValue: string) {
   return `${dateValue}T${formatTime(timeValue)}:00+03:00`;
 }
 
+function maxDateValue(left: string, right: string) {
+  return compareDateValues(left, right) >= 0 ? left : right;
+}
+
+function minDateValue(left: string, right: string) {
+  return compareDateValues(left, right) <= 0 ? left : right;
+}
+
+function datesInWindowByWeekday(startDate: string, endDate: string, weekday: number) {
+  const dates: string[] = [];
+  let current = startDate;
+
+  while (compareDateValues(current, endDate) <= 0 && weekdayOfDateValue(current) !== weekday) {
+    current = addDaysToDateValue(current, 1);
+  }
+
+  while (compareDateValues(current, endDate) <= 0) {
+    dates.push(current);
+    current = addDaysToDateValue(current, 7);
+  }
+
+  return dates;
+}
+
 function formatMoney(amount: number, currency: string) {
   return new Intl.NumberFormat("ru-RU", {
     currency,
@@ -1248,6 +1315,91 @@ function studentAttendanceStatus(
   }
 
   return { label: "не отмечено", status: "unknown" };
+}
+
+async function ensureTeacherGroupLessonsForMonth(
+  client: SupabaseClient,
+  organizationId: string,
+  group: GroupRow,
+  monthValue: string,
+) {
+  if (!group.teacher_id) {
+    return 0;
+  }
+
+  const monthStart = `${monthValue}-01`;
+  const monthEnd = addDaysToDateValue(`${addMonthValue(monthValue, 1)}-01`, -1);
+  const [rulesResult, existingResult] = await Promise.all([
+    client
+      .from("schedule_rules")
+      .select("id,target_type,target_id,weekday,start_time,end_time,starts_on,ends_on,status")
+      .eq("organization_id", organizationId)
+      .eq("target_type", "group")
+      .eq("target_id", group.id)
+      .eq("status", "active"),
+    client
+      .from("lessons")
+      .select("schedule_rule_id,starts_at")
+      .eq("organization_id", organizationId)
+      .eq("group_id", group.id)
+      .gte("starts_at", monthBoundaryIso(monthValue))
+      .lt("starts_at", monthBoundaryIso(addMonthValue(monthValue, 1))),
+  ]);
+
+  const rules = rows<ScheduleRuleRow>(rulesResult, "Расписание журнала группы");
+
+  if (rules.length === 0) {
+    return 0;
+  }
+
+  const existingSlots = new Set(
+    rows<{ schedule_rule_id: string | null; starts_at: string }>(existingResult, "Проверка уроков журнала")
+      .filter((lesson) => lesson.schedule_rule_id)
+      .map((lesson) => `${lesson.schedule_rule_id}:${new Date(lesson.starts_at).toISOString()}`),
+  );
+  const lessonsToCreate = rules.flatMap((rule) => {
+    const startDate = maxDateValue(monthStart, rule.starts_on);
+    const endDate = rule.ends_on ? minDateValue(monthEnd, rule.ends_on) : monthEnd;
+
+    if (compareDateValues(startDate, endDate) > 0) {
+      return [];
+    }
+
+    return datesInWindowByWeekday(startDate, endDate, rule.weekday)
+      .map((scheduledAt) => {
+        const startsAt = moscowDateTimeIso(scheduledAt, rule.start_time);
+        const startsAtKey = new Date(startsAt).toISOString();
+
+        return {
+          organization_id: organizationId,
+          course_id: group.course_id,
+          group_id: group.id,
+          individual_enrollment_id: null,
+          teacher_id: group.teacher_id,
+          schedule_rule_id: rule.id,
+          scheduled_at: scheduledAt,
+          starts_at: startsAt,
+          ends_at: moscowDateTimeIso(scheduledAt, rule.end_time),
+          topic: null,
+          summary: "Создано по расписанию",
+          starts_at_key: startsAtKey,
+        };
+      })
+      .filter((lesson) => !existingSlots.has(`${lesson.schedule_rule_id}:${lesson.starts_at_key}`))
+      .map(({ starts_at_key, ...lesson }) => lesson);
+  });
+
+  if (lessonsToCreate.length === 0) {
+    return 0;
+  }
+
+  const insertResult = await client.from("lessons").insert(lessonsToCreate);
+
+  if (insertResult.error) {
+    throw new Error(`Создание уроков журнала: ${insertResult.error.message}`);
+  }
+
+  return lessonsToCreate.length;
 }
 
 function lessonMarkOptions(scale: string | null | undefined): SelectOption[] {
@@ -2699,6 +2851,192 @@ export async function getTeacherGroups(organizationId: string, email: string) {
   });
 }
 
+export async function getTeacherAttendance(
+  organizationId: string,
+  email: string,
+  filters: TeacherAttendanceFilters = {},
+) {
+  return readSupabaseData<TeacherAttendanceData>(async (client) => {
+    const teacher = await getUserByEmail(client, email);
+    const { courses, groups, students } = await getBaseOrganizationData(client, organizationId);
+    const teacherGroups = groups.filter((group) => group.teacher_id === teacher.id && group.status !== "archived");
+    const groupOptions = teacherGroups
+      .map((group) => ({
+        label: `${group.name} - ${courses.find((course) => course.id === group.course_id)?.name ?? "курс"}`,
+        value: group.id,
+      }))
+      .sort((left, right) => left.label.localeCompare(right.label, "ru"));
+    const selectedGroupId = groupOptions.some((option) => option.value === filters.groupId) ? filters.groupId ?? "" : "";
+    const visibleGroups = selectedGroupId ? teacherGroups.filter((group) => group.id === selectedGroupId) : teacherGroups;
+    const groupIds = visibleGroups.map((group) => group.id);
+    const monthValue = normalizeMonthValue(filters.month);
+    const nextMonth = addMonthValue(monthValue, 1);
+    const now = new Date();
+    const [groupStudentsResult, lessonsResult] = await Promise.all([
+      groupIds.length > 0
+        ? client.from("group_students").select("id,group_id,student_id,status").in("group_id", groupIds)
+        : Promise.resolve({ data: [], error: null }),
+      groupIds.length > 0
+        ? client
+            .from("lessons")
+            .select("id,course_id,group_id,teacher_id,starts_at,ends_at,topic")
+            .eq("organization_id", organizationId)
+            .in("group_id", groupIds)
+            .gte("starts_at", monthBoundaryIso(monthValue))
+            .lt("starts_at", monthBoundaryIso(nextMonth))
+            .order("starts_at", { ascending: true })
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+    const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Ученики посещаемости преподавателя").filter(
+      (item) => item.status === "active",
+    );
+    const lessons = rows<LessonRow>(lessonsResult, "Уроки посещаемости преподавателя").filter(
+      (lesson) => new Date(lesson.starts_at).getTime() <= now.getTime(),
+    );
+    const lessonIds = lessons.map((lesson) => lesson.id);
+    const activeStudentIds = new Set(groupStudents.map((item) => item.student_id));
+    const journalResult =
+      lessonIds.length > 0
+        ? await client
+            .from("journal_entries")
+            .select("id,lesson_id,student_id,attendance_mark,lesson_mark,teacher_comment,internal_comment,is_visible_to_student")
+            .in("lesson_id", lessonIds)
+        : { data: [], error: null };
+    const journalEntries = rows<JournalEntryRow>(journalResult, "Записи посещаемости преподавателя").filter((entry) =>
+      activeStudentIds.has(entry.student_id),
+    );
+    const courseMap = byId(courses);
+    const groupMap = byId(visibleGroups);
+    const studentMap = byId(students);
+    const journalEntryMap = new Map(journalEntries.map((entry) => [journalKey(entry.lesson_id, entry.student_id), entry]));
+    const lessonsByGroupId = new Map<string, LessonRow[]>();
+
+    for (const lesson of lessons) {
+      if (!lesson.group_id) {
+        continue;
+      }
+
+      const items = lessonsByGroupId.get(lesson.group_id) ?? [];
+      items.push(lesson);
+      lessonsByGroupId.set(lesson.group_id, items);
+    }
+
+    const lowThreshold = 80;
+    const attendanceRows = groupStudents
+      .map((membership) => {
+        const group = groupMap.get(membership.group_id);
+        const student = studentMap.get(membership.student_id);
+        const groupLessons = lessonsByGroupId.get(membership.group_id) ?? [];
+        let presentCount = 0;
+        let absentCount = 0;
+        let excusedCount = 0;
+        let recordedCount = 0;
+        let lastLesson: LessonRow | null = null;
+
+        for (const lesson of groupLessons) {
+          const entry = journalEntryMap.get(journalKey(lesson.id, membership.student_id));
+
+          if (entry) {
+            recordedCount += 1;
+            lastLesson = lesson;
+          }
+
+          const mark = normalizeAttendanceMark(entry?.attendance_mark ?? null);
+
+          if (mark === "absent") {
+            absentCount += 1;
+            continue;
+          }
+
+          if (mark === "excused") {
+            excusedCount += 1;
+            continue;
+          }
+
+          if (mark === "present" || Boolean(entry?.lesson_mark) || Boolean(entry)) {
+            presentCount += 1;
+          }
+        }
+
+        const lessonCount = groupLessons.length;
+        const percentValue = lessonCount > 0 && recordedCount > 0 ? Math.round((presentCount / lessonCount) * 100) : null;
+        const missedCount = absentCount + excusedCount;
+        const statusTone: TeacherAttendanceRow["statusTone"] =
+          percentValue === null ? "neutral" : percentValue < lowThreshold ? "danger" : missedCount > 0 ? "warning" : "ok";
+        const status =
+          percentValue === null
+            ? "нет данных"
+            : percentValue < lowThreshold
+              ? "низкая посещаемость"
+              : missedCount > 0
+                ? "есть пропуски"
+                : "100%";
+
+        return {
+          absentCount,
+          courseId: group?.course_id ?? "",
+          excusedCount,
+          missedCount,
+          percentValue,
+          row: {
+            absent: String(absentCount),
+            contacts: [student?.phone, student?.email].filter(Boolean).join(", ") || "контакты не заполнены",
+            context: `${group?.name ?? "Группа"} - ${courseMap.get(group?.course_id ?? "")?.name ?? "курс"}`,
+            excused: String(excusedCount),
+            groupId: membership.group_id,
+            id: `${membership.group_id}:${membership.student_id}`,
+            journalHref: `/teacher/groups/${membership.group_id}/journal?month=${monthValue}`,
+            lastLesson: lastLesson ? formatDateTime(lastLesson.starts_at) : "нет записи",
+            lastLessonHref: lastLesson ? `/teacher/lessons/${lastLesson.id}` : null,
+            lessons: String(lessonCount),
+            name: student?.name ?? "Ученик",
+            percent: percentValue === null ? "нет данных" : `${percentValue}%`,
+            present: String(presentCount),
+            status,
+            statusTone,
+            studentHref: `/teacher/students/${membership.student_id}`,
+          },
+        };
+      })
+      .filter((item) => (filters.onlyAbsences ? item.missedCount > 0 : true))
+      .filter((item) => (filters.lowOnly ? item.percentValue !== null && item.percentValue < lowThreshold : true))
+      .map((item) => item.row)
+      .sort((left, right) => left.name.localeCompare(right.name, "ru") || left.context.localeCompare(right.context, "ru"));
+
+    const rowsWithPercent = attendanceRows
+      .map((row) => Number.parseInt(row.percent, 10))
+      .filter((value) => Number.isFinite(value));
+    const averagePercent =
+      rowsWithPercent.length > 0 ? `${Math.round(rowsWithPercent.reduce((sum, value) => sum + value, 0) / rowsWithPercent.length)}%` : "нет данных";
+    const rowsWithAbsences = attendanceRows.filter((row) => Number(row.absent) + Number(row.excused) > 0).length;
+    const lowRows = attendanceRows.filter((row) => {
+      const percentValue = Number.parseInt(row.percent, 10);
+      return Number.isFinite(percentValue) && percentValue < lowThreshold;
+    }).length;
+
+    return {
+      activeFilters: {
+        groupId: selectedGroupId,
+        lowOnly: Boolean(filters.lowOnly),
+        month: monthValue,
+        onlyAbsences: Boolean(filters.onlyAbsences),
+      },
+      groupOptions,
+      lowThreshold: `${lowThreshold}%`,
+      metrics: [
+        { label: "Строки", value: String(attendanceRows.length), detail: "ученики в группах" },
+        { label: "Средняя посещаемость", value: averagePercent, detail: "по строкам с данными" },
+        { label: "С пропусками", value: String(rowsWithAbsences) },
+        { label: "Ниже порога", value: String(lowRows), detail: `< ${lowThreshold}%` },
+      ],
+      monthLabel: formatMonthLabel(monthValue),
+      nextMonth,
+      previousMonth: addMonthValue(monthValue, -1),
+      rows: attendanceRows,
+    };
+  });
+}
+
 export async function getTeacherGroupDetail(organizationId: string, email: string, groupId: string) {
   return readSupabaseData<TeacherGroupDetailData>(async (client) => {
     const teacher = await getUserByEmail(client, email);
@@ -2877,7 +3215,9 @@ export async function getTeacherGroupJournal(organizationId: string, email: stri
 
     const monthValue = normalizeMonthValue(month);
     const nextMonth = addMonthValue(monthValue, 1);
-    const [lessonsResult, groupStudentsResult] = await Promise.all([
+    await ensureTeacherGroupLessonsForMonth(client, organizationId, group, monthValue);
+
+    const [lessonsResult, groupStudentsResult, scheduleRulesResult] = await Promise.all([
       client
         .from("lessons")
         .select("id,course_id,group_id,teacher_id,starts_at,ends_at,topic")
@@ -2887,10 +3227,20 @@ export async function getTeacherGroupJournal(organizationId: string, email: stri
         .lt("starts_at", monthBoundaryIso(nextMonth))
         .order("starts_at", { ascending: true }),
       client.from("group_students").select("id,group_id,student_id,status").eq("group_id", groupId),
+      client
+        .from("schedule_rules")
+        .select("id,target_type,target_id,weekday,start_time,end_time,starts_on,ends_on,status")
+        .eq("organization_id", organizationId)
+        .eq("target_type", "group")
+        .eq("target_id", groupId)
+        .eq("status", "active")
+        .order("weekday", { ascending: true })
+        .order("start_time", { ascending: true }),
     ]);
 
     const lessons = rows<LessonRow>(lessonsResult, "Уроки журнала группы");
     const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Состав журнала группы");
+    const scheduleRules = rows<ScheduleRuleRow>(scheduleRulesResult, "Расписание журнала группы");
     const lessonIds = lessons.map((lesson) => lesson.id);
     const activeGroupStudents = groupStudents.filter((item) => item.status === "active");
     const activeStudentIds = new Set(activeGroupStudents.map((item) => item.student_id));
@@ -3018,6 +3368,11 @@ export async function getTeacherGroupJournal(organizationId: string, email: stri
       previousMonth: addMonthValue(monthValue, -1),
       nextMonth,
       lessons: journalLessons,
+      schedule: scheduleRules.map((rule) => {
+        const period = rule.ends_on ? `${formatDate(rule.starts_on)} - ${formatDate(rule.ends_on)}` : `с ${formatDate(rule.starts_on)}`;
+
+        return `${weekdayLabel(rule.weekday)} ${formatTime(rule.start_time)}-${formatTime(rule.end_time)}; ${period}`;
+      }),
       students: journalStudents,
       savedEntries: String(journalEntries.length),
     };
