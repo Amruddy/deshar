@@ -2,10 +2,21 @@
 
 const baseUrl = normalizeBaseUrl(process.env.SMOKE_BASE_URL ?? "http://127.0.0.1:3000");
 
+const unauthenticatedRedirects = [
+  { path: "/admin", expected: "/login" },
+  { path: "/teacher", expected: "/login" },
+  { path: "/student", expected: "/login" },
+  { path: "/profile", expected: "/login" },
+];
+
 const roles = [
   {
     name: "Администратор",
     cookie: "dev_user_email=admin@example.test; dev_workspace=admin",
+    forbidden: [
+      { path: "/teacher", expected: "/forbidden?required=teacher" },
+      { path: "/student", expected: "/forbidden?required=student" },
+    ],
     required: [
       "/admin",
       "/admin/courses",
@@ -23,6 +34,10 @@ const roles = [
   {
     name: "Преподаватель",
     cookie: "dev_user_email=teacher@example.test; dev_workspace=teacher",
+    forbidden: [
+      { path: "/admin", expected: "/forbidden?required=admin" },
+      { path: "/student", expected: "/forbidden?required=student" },
+    ],
     required: [
       "/teacher",
       "/teacher/groups",
@@ -42,6 +57,10 @@ const roles = [
   {
     name: "Ученик",
     cookie: "dev_user_email=student@example.test; dev_workspace=student",
+    forbidden: [
+      { path: "/admin", expected: "/forbidden?required=admin" },
+      { path: "/teacher", expected: "/forbidden?required=teacher" },
+    ],
     required: [
       "/student",
       "/student/schedule",
@@ -60,6 +79,11 @@ let checkedCount = 0;
 let skippedCount = 0;
 
 console.log(`Cross-role smoke: ${baseUrl}`);
+
+console.log("\nБез входа");
+for (const redirectCheck of unauthenticatedRedirects) {
+  await expectRedirect(redirectCheck.path, null, redirectCheck.expected, redirectCheck.path);
+}
 
 for (const role of roles) {
   const cache = new Map();
@@ -83,6 +107,10 @@ for (const role of roles) {
 
     await checkPath(role, path, discovery.label);
   }
+
+  for (const redirectCheck of role.forbidden) {
+    await expectRedirect(redirectCheck.path, role.cookie, redirectCheck.expected, `запрет ${redirectCheck.path}`);
+  }
 }
 
 if (failures.length > 0) {
@@ -96,28 +124,19 @@ if (failures.length > 0) {
 console.log(`\nSmoke по ролям прошел. Проверено: ${checkedCount}. Пропущено динамических ссылок: ${skippedCount}.`);
 
 async function checkPath(role, path, label = path) {
-  const targetUrl = new URL(path, baseUrl);
-
   try {
-    const response = await fetch(targetUrl, {
-      headers: {
-        Cookie: role.cookie,
-      },
-      redirect: "manual",
-    });
-
-    const body = await response.text();
-    const redirectTarget = response.headers.get("location");
+    const { body, location, status } = await requestPath(path, role.cookie);
+    const redirectTarget = location ? locationPath(location) : redirectedPathFromBody(body);
     const isBlockedRedirect =
-      response.status >= 300 &&
-      response.status < 400 &&
+      status >= 300 &&
+      status < 400 &&
       (redirectTarget?.startsWith("/login") || redirectTarget?.startsWith("/forbidden"));
-    const isUnexpectedStatus = response.status >= 400 || (response.status >= 300 && response.status < 400);
+    const isUnexpectedStatus = status >= 400 || (status >= 300 && status < 400);
 
     if (isBlockedRedirect || isUnexpectedStatus) {
       const redirectSuffix = redirectTarget ? ` -> ${redirectTarget}` : "";
-      failures.push(`${role.name}: ${path} вернул ${response.status}${redirectSuffix}`);
-      console.log(`  [fail] ${label}: ${response.status}${redirectSuffix}`);
+      failures.push(`${role.name}: ${path} вернул ${status}${redirectSuffix}`);
+      console.log(`  [fail] ${label}: ${status}${redirectSuffix}`);
       return { body };
     }
 
@@ -138,6 +157,40 @@ async function checkPath(role, path, label = path) {
     console.log(`  [fail] ${label}: ${message}`);
     return { body: "" };
   }
+}
+
+async function expectRedirect(path, cookie, expectedPathPrefix, label) {
+  const response = await requestPath(path, cookie);
+  const location = response.location ? locationPath(response.location) : redirectedPathFromBody(response.body);
+
+  if (!isRedirectResponse(response.status, location) || !location.startsWith(expectedPathPrefix)) {
+    const redirectSuffix = response.location ? ` -> ${locationPath(response.location)}` : "";
+    failures.push(`${label}: ожидался redirect на ${expectedPathPrefix}, получено ${response.status}${redirectSuffix}`);
+    console.log(`  [fail] ${label}: ${response.status}${redirectSuffix}`);
+    return;
+  }
+
+  checkedCount += 1;
+  console.log(`  [ok] ${label}: redirect ${location}`);
+}
+
+async function requestPath(path, cookie) {
+  const headers = cookie ? { Cookie: cookie } : {};
+  const response = await fetch(new URL(path, baseUrl), {
+    headers,
+    redirect: "manual",
+  });
+  const body = await response.text();
+
+  return {
+    body,
+    location: response.headers.get("location"),
+    status: response.status,
+  };
+}
+
+function isRedirectResponse(status, location) {
+  return Boolean(location) && ((status >= 300 && status < 400) || status === 200);
 }
 
 function findFirstLink(html, pattern) {
@@ -174,7 +227,36 @@ function collectLinks(html) {
 }
 
 function decodeHtmlAttribute(value) {
-  return value.replaceAll("&amp;", "&").replaceAll("&#x2F;", "/").replaceAll("&#47;", "/");
+  return value
+    .replaceAll("&amp;", "&")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#x2F;", "/")
+    .replaceAll("&#47;", "/");
+}
+
+function locationPath(location) {
+  try {
+    const parsed = new URL(location, baseUrl);
+    return `${parsed.pathname}${parsed.search}`;
+  } catch {
+    return location;
+  }
+}
+
+function redirectedPathFromBody(body) {
+  const nextRedirectMatch = body.match(/NEXT_REDIRECT;(?:replace|push);([^;"]+);/);
+
+  if (nextRedirectMatch?.[1]) {
+    return locationPath(decodeHtmlAttribute(nextRedirectMatch[1]));
+  }
+
+  const metaRedirectMatch = body.match(/<meta[^>]+id=["']__next-page-redirect["'][^>]+content=["'][^"']*url=([^"']+)["']/);
+
+  if (metaRedirectMatch?.[1]) {
+    return locationPath(decodeHtmlAttribute(metaRedirectMatch[1]));
+  }
+
+  return "";
 }
 
 function getSupabaseDataFailureState(html) {
