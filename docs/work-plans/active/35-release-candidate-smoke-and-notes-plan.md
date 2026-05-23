@@ -5,9 +5,12 @@
 - Статус плана: активен.
 - Большой блок: `Release 1.0`.
 - Stage релиза: `Release Stage 7. Release Candidate Smoke And Notes`.
-- Рабочая ветка: `fix/teacher-attendance-journal`.
+- Рабочая ветка: `feat/release-candidate-smoke-notes`.
 - Предыдущий завершенный plan: `../completed/34-production-hardening-plan.md`.
 - Roadmap релиза: `docs/roadmap/release-1-roadmap.md`.
+- Первый blocker по журналу и посещаемости закрыт в PR #58
+  (`fix/teacher-attendance-journal`).
+- Текущий блок: финальный release-candidate smoke и release notes.
 
 ## 1. Цель
 
@@ -57,8 +60,25 @@
 - Усилить `smoke:roles`, чтобы `/teacher/attendance` проверялся как рабочий
   раздел, а не только как маршрут без ошибки.
 - После исправления пройти автоматические проверки.
-- Зафиксировать оставшиеся release limitations и финальные release notes, если
-  после smoke останутся ограничения.
+- Зафиксировать оставшиеся release limitations и финальные release notes.
+
+### 3.3. Статус release-candidate smoke
+
+На 2026-05-23 проверено:
+
+- `git diff --check` - прошел;
+- `npm.cmd run lint` - прошел;
+- `npm.cmd run build` - прошел;
+- `npm.cmd run smoke:roles` - прошел, проверено 37 маршрутов и прав доступа,
+  пропущено 0 динамических ссылок;
+- `npm.cmd run smoke:auth` - прошел для admin/teacher/student и disabled
+  profile;
+- HTTP-smoke преподавателя подтвердил `/teacher/groups`,
+  `/teacher/groups/[groupId]/journal` и `/teacher/attendance`.
+
+Результат release-candidate проверки зафиксирован в:
+
+`docs/release/release-1-release-candidate.md`
 
 ## 4. Что не входит
 
