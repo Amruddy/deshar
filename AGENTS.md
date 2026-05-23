@@ -38,6 +38,11 @@ Codex must use the project specifications as the source of truth before making c
 - Prefer existing project patterns once the application code exists.
 - Run available checks after changes.
 - After automated checks, Codex should run a basic smoke-check itself whenever the project can be checked locally.
+- When the user asks Codex to inspect, fix, implement, or verify work in this repository, treat that request as permission for Codex to read, list, search, and open project files, and to run non-destructive local verification commands needed for the task without asking for approval each time.
+- The user grants Codex standing permission to read, list, search, and open all local files, including files outside this repository such as Codex skills, plugins, caches, and local configuration. Codex should not ask conversational permission for read-only file access.
+- Non-destructive local verification includes commands such as `git status`, `git diff`, `npm.cmd run lint`, `npm.cmd run build`, project smoke scripts, and starting a local dev server for smoke-checks when the task requires it.
+- Codex should ask the user again only for destructive actions, secrets or credentials, external services or network operations that require approval, database writes outside the local development flow, branch-changing operations not already covered by the stage workflow, and commit/push actions required by this file.
+- If the Codex runtime or sandbox requires a separate approval prompt for a command, Codex may request that technical approval, but should not add extra conversational permission questions for already authorized read/check actions.
 - Before committing and pushing a stage, summarize in Russian what Codex already checked, then explicitly ask whether the user wants to do a manual check before commit/push.
 - The manual check prompt must include concrete paths or URLs to open, the exact user actions to try, and what result should be expected for the current stage.
 - The user may skip manual review and explicitly tell Codex to continue. If the user asks to review manually, do not commit, push, or move to the next MPMF 1.0 stage until the user explicitly confirms to continue.
@@ -78,7 +83,7 @@ The current active implementation source of truth is named in:
 
 Current active technical plan:
 
-`docs/work-plans/active/27-auth-stage-2-supabase-auth-session-foundation-plan.md`
+`docs/work-plans/active/33-functional-ux-fixes-before-hardening-plan.md`
 
 Use the roadmap and `docs/work-plans/active/README.md` to determine whether a
 stage is active. If no active plan is selected, create or update the next stage

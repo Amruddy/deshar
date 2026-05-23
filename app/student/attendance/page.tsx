@@ -49,7 +49,7 @@ export default async function StudentAttendancePage() {
           ) : (
             <section className="panel student-compact-card student-attendance-empty">
               <h2>Отметок пока нет</h2>
-              <p>Посещаемость появится после проведенных занятий, когда преподаватель заполнит журнал.</p>
+              <p>Если уроки уже были, преподаватель еще не сохранил по ним журнал. После сохранения здесь появятся посещения и пропуски.</p>
             </section>
           )}
         </div>

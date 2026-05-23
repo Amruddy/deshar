@@ -79,6 +79,7 @@ export default async function TeacherGroupJournalPage({ params, searchParams }: 
                   <span>П - присутствовал</span>
                   <span>Н - отсутствовал</span>
                   <span>У - уважительная причина</span>
+                  <span>Можно писать вручную: Н или n, У или u, либо оценку.</span>
                   <span>Пусто после сохраненного прошедшего урока считается присутствием.</span>
                 </div>
               </aside>
@@ -123,7 +124,7 @@ export default async function TeacherGroupJournalPage({ params, searchParams }: 
                             </th>
                             {data.lessons.map((lesson, lessonIndex) => {
                               const cell = student.cells[lessonIndex];
-                              const selectId = `attendance-${lesson.id}-${student.id}`;
+                              const inputId = `mark-${lesson.id}-${student.id}`;
 
                               return (
                                 <td
@@ -134,21 +135,18 @@ export default async function TeacherGroupJournalPage({ params, searchParams }: 
                                   key={cell.id}
                                 >
                                   <div className="journal-cell">
-                                    <label className="visually-hidden" htmlFor={selectId}>
+                                    <label className="visually-hidden" htmlFor={inputId}>
                                       {student.name}, {lesson.day}
                                     </label>
-                                    <select
+                                    <input
                                       aria-label={`${student.name}, ${lesson.day}`}
                                       className="journal-cell-input"
-                                      defaultValue={cell.attendanceMark}
-                                      id={selectId}
-                                      name={`attendance__${cell.lessonId}__${cell.studentId}`}
-                                    >
-                                      <option value="">-</option>
-                                      <option value="present">П</option>
-                                      <option value="absent">Н</option>
-                                      <option value="excused">У</option>
-                                    </select>
+                                      defaultValue={cell.markValue}
+                                      id={inputId}
+                                      maxLength={2}
+                                      name={`mark__${cell.lessonId}__${cell.studentId}`}
+                                      placeholder="-"
+                                    />
                                     {cell.indicators.length > 0 ? (
                                       <div className="journal-cell-meta">
                                         {cell.indicators.map((indicator) => (
@@ -170,7 +168,7 @@ export default async function TeacherGroupJournalPage({ params, searchParams }: 
                     <button className="button compact-button" type="submit">
                       Сохранить журнал
                     </button>
-                    <p>Сохраняются только быстрые отметки посещаемости. Детали урока появятся на странице урока.</p>
+                    <p>В ячейке можно написать П, Н/n, У/u или оценку по шкале курса. Детали урока остаются на странице урока.</p>
                   </div>
                 </form>
               )}

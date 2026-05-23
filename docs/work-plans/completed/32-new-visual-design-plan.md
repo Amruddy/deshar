@@ -2,10 +2,12 @@
 
 ## 0. Статус
 
-- Статус плана: активный кодовый stage.
+- Статус плана: завершен, PR #54.
 - Большой блок: `Release 1.0`.
 - Stage релиза: `Release Stage 4. New Visual Design`.
 - Планируемая ветка: `feat/new-visual-design`.
+- Коммит stage: `35fa19a Implement new visual design stage`.
+- Дополнительная cleanup-ветка после merge: `cleanup/remove-design-prototypes`, PR #55, коммит `fefb41f Remove temporary design prototypes`.
 - Roadmap релиза: `docs/roadmap/release-1-roadmap.md`.
 - Предыдущий завершенный plan: `docs/work-plans/completed/31-final-design-system-ux-polish-plan.md`.
 
@@ -166,7 +168,7 @@ Stage должен сохранить текущую бизнес-логику, 
 
 После merge этого stage:
 
-`Production Hardening`
+`Functional UX Fixes Before Hardening`
 
 ## 9. Замечания пользователя после первого переноса дизайна
 

@@ -64,6 +64,7 @@ type TeacherUserRow = {
 };
 
 type TeacherGroupRow = {
+  course_id: string;
   id: string;
   teacher_id: string | null;
 };
@@ -132,8 +133,8 @@ type ExistingLessonJournalEntryRow = {
 type AttendanceMark = "absent" | "excused" | "present" | null;
 
 type JournalSubmission = {
-  attendanceMark: AttendanceMark;
   lessonId: string;
+  rawMark: string;
   studentId: string;
 };
 
@@ -177,6 +178,44 @@ function parseAttendanceMark(value: string): AttendanceMark {
   throw new Error("Журнал: неверная отметка посещаемости.");
 }
 
+function attendanceMarkToManualValue(value: string) {
+  if (value === "present") {
+    return "П";
+  }
+
+  if (value === "absent") {
+    return "Н";
+  }
+
+  if (value === "excused") {
+    return "У";
+  }
+
+  return "";
+}
+
+function parseManualJournalMark(value: string, scale: string | null | undefined) {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized.length === 0) {
+    return { attendanceMark: null, lessonMark: null };
+  }
+
+  if (normalized === "п" || normalized === "p") {
+    return { attendanceMark: "present" as const, lessonMark: null };
+  }
+
+  if (normalized === "н" || normalized === "n") {
+    return { attendanceMark: "absent" as const, lessonMark: null };
+  }
+
+  if (normalized === "у" || normalized === "u") {
+    return { attendanceMark: "excused" as const, lessonMark: null };
+  }
+
+  return { attendanceMark: null, lessonMark: parseLessonMark(normalized, scale) };
+}
+
 function journalKey(lessonId: string, studentId: string) {
   return `${lessonId}:${studentId}`;
 }
@@ -185,7 +224,10 @@ function parseJournalSubmissions(formData: FormData) {
   const submissions = new Map<string, JournalSubmission>();
 
   for (const [field, value] of formData.entries()) {
-    if (!field.startsWith("attendance__")) {
+    const isManualMark = field.startsWith("mark__");
+    const isLegacyAttendance = field.startsWith("attendance__");
+
+    if (!isManualMark && !isLegacyAttendance) {
       continue;
     }
 
@@ -202,9 +244,11 @@ function parseJournalSubmissions(formData: FormData) {
     assertUuid(lessonId, "Урок журнала");
     assertUuid(studentId, "Ученик журнала");
 
+    const rawMark = isLegacyAttendance ? attendanceMarkToManualValue(value) : value.trim();
+
     submissions.set(journalKey(lessonId, studentId), {
-      attendanceMark: parseAttendanceMark(value),
       lessonId,
+      rawMark,
       studentId,
     });
   }
@@ -870,7 +914,7 @@ export async function saveTeacherGroupJournal(input: SaveTeacherGroupJournalInpu
 
   const groupResult = await supabase
     .from("groups")
-    .select("id,teacher_id")
+    .select("id,course_id,teacher_id")
     .eq("id", input.groupId)
     .eq("organization_id", input.organizationId)
     .maybeSingle();
@@ -889,7 +933,7 @@ export async function saveTeacherGroupJournal(input: SaveTeacherGroupJournalInpu
 
   const lessonIds = [...new Set(submissions.map((submission) => submission.lessonId))];
   const studentIds = [...new Set(submissions.map((submission) => submission.studentId))];
-  const [lessonsResult, groupStudentsResult, existingEntriesResult] = await Promise.all([
+  const [lessonsResult, groupStudentsResult, courseResult, existingEntriesResult] = await Promise.all([
     supabase
       .from("lessons")
       .select("id")
@@ -897,12 +941,25 @@ export async function saveTeacherGroupJournal(input: SaveTeacherGroupJournalInpu
       .eq("group_id", input.groupId)
       .in("id", lessonIds),
     supabase.from("group_students").select("student_id,status").eq("group_id", input.groupId).in("student_id", studentIds),
+    supabase
+      .from("courses")
+      .select("id,lesson_mark_scale")
+      .eq("id", group.course_id)
+      .eq("organization_id", input.organizationId)
+      .maybeSingle(),
     supabase.from("journal_entries").select("id,lesson_id,student_id").in("lesson_id", lessonIds).in("student_id", studentIds),
   ]);
 
   assertWriteSuccess(lessonsResult.error, "Проверка уроков журнала");
   assertWriteSuccess(groupStudentsResult.error, "Проверка учеников журнала");
+  assertWriteSuccess(courseResult.error, "Проверка курса журнала");
   assertWriteSuccess(existingEntriesResult.error, "Проверка существующих отметок журнала");
+
+  const course = courseResult.data as TeacherCourseRow | null;
+
+  if (!course) {
+    throw new Error("Журнал группы: курс не найден.");
+  }
 
   const validLessonIds = new Set(((lessonsResult.data ?? []) as LessonIdRow[]).map((lesson) => lesson.id));
   const validStudentIds = new Set(
@@ -926,13 +983,23 @@ export async function saveTeacherGroupJournal(input: SaveTeacherGroupJournalInpu
   );
   const updatedAt = new Date().toISOString();
   const payload = submissions
-    .filter((submission) => submission.attendanceMark !== null || existingEntryKeys.has(journalKey(submission.lessonId, submission.studentId)))
-    .map((submission) => ({
-      attendance_mark: submission.attendanceMark,
-      lesson_id: submission.lessonId,
-      student_id: submission.studentId,
-      updated_at: updatedAt,
-    }));
+    .map((submission) => {
+      const parsedMark = parseManualJournalMark(submission.rawMark, course.lesson_mark_scale);
+      const key = journalKey(submission.lessonId, submission.studentId);
+
+      if (parsedMark.attendanceMark === null && parsedMark.lessonMark === null && !existingEntryKeys.has(key)) {
+        return null;
+      }
+
+      return {
+        attendance_mark: parsedMark.attendanceMark,
+        lesson_id: submission.lessonId,
+        lesson_mark: parsedMark.lessonMark,
+        student_id: submission.studentId,
+        updated_at: updatedAt,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
 
   if (payload.length === 0) {
     return 0;
