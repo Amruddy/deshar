@@ -10,14 +10,26 @@ export class SupabasePublicConfigError extends Error {
 
 export function readSupabasePublicEnv() {
   const missingEnv: string[] = [];
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const publishableKey = (
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  )?.trim();
 
-  if (!url?.trim()) {
+  if (!url) {
     missingEnv.push("NEXT_PUBLIC_SUPABASE_URL");
+  } else {
+    try {
+      const parsedUrl = new URL(url);
+
+      if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+        missingEnv.push("NEXT_PUBLIC_SUPABASE_URL (некорректный URL)");
+      }
+    } catch {
+      missingEnv.push("NEXT_PUBLIC_SUPABASE_URL (некорректный URL)");
+    }
   }
 
-  if (!publishableKey?.trim()) {
+  if (!publishableKey) {
     missingEnv.push("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY или NEXT_PUBLIC_SUPABASE_ANON_KEY");
   }
 

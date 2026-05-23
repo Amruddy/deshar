@@ -2,10 +2,11 @@
 
 ## 0. Статус
 
-- Статус плана: активный кодовый stage.
+- Статус плана: завершен, PR #56.
 - Большой блок: `Release 1.0`.
 - Stage релиза: `Release Stage 5. Functional UX Fixes Before Hardening`.
 - Планируемая ветка: `feat/functional-ux-fixes-before-hardening`.
+- Коммит stage: `a04c489 Fix functional UX before hardening`.
 - Roadmap релиза: `docs/roadmap/release-1-roadmap.md`.
 - Предыдущий завершенный plan: `docs/work-plans/completed/32-new-visual-design-plan.md`.
 

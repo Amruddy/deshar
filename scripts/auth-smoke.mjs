@@ -114,6 +114,7 @@ async function upsertAuthUser(email, password) {
   if (linkedDomainUser?.auth_user_id) {
     const { data, error } = await retrySupabase(() =>
       adminClient.auth.admin.updateUserById(linkedDomainUser.auth_user_id, {
+        ban_duration: "none",
         email_confirm: true,
         password,
         user_metadata: {
@@ -132,6 +133,7 @@ async function upsertAuthUser(email, password) {
   if (existingUser) {
     const { data, error } = await retrySupabase(() =>
       adminClient.auth.admin.updateUserById(existingUser.id, {
+        ban_duration: "none",
         email_confirm: true,
         password,
         user_metadata: {
@@ -173,7 +175,7 @@ async function signInAuthUser(email, password) {
     return data.user.id;
   }
 
-  if (error && error.message !== "Invalid login credentials") {
+  if (error && !["Invalid login credentials", "User is banned"].includes(error.message)) {
     fail(`Не удалось проверить Supabase Auth вход ${email}: ${error.message}`);
   }
 

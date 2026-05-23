@@ -1,7 +1,14 @@
+import "server-only";
+
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { hasSupabaseAuthStorageCookie, SupabasePublicConfigError, readSupabasePublicEnv } from "@/app/lib/supabase/env";
-import { createSupabaseAdminClient, createSupabaseServerClient, SupabaseServerConfigError } from "@/app/lib/supabase/server";
+import {
+  createSupabaseAdminClient,
+  createSupabaseServerClient,
+  SupabaseRequestTimeoutError,
+  SupabaseServerConfigError,
+} from "@/app/lib/supabase/server";
 
 export type WorkspaceRole = "admin" | "teacher" | "student";
 
@@ -140,6 +147,7 @@ export type SessionResolutionFailure =
   | "profile_disabled"
   | "profile_not_found"
   | "signed_out"
+  | "supabase_not_configured"
   | "workspace_not_available";
 
 export type SessionResolutionResult =
@@ -278,7 +286,7 @@ async function getSupabaseAuthIdentity() {
       email: email.trim().toLowerCase(),
     };
   } catch (error) {
-    if (error instanceof SupabasePublicConfigError) {
+    if (error instanceof SupabasePublicConfigError || error instanceof SupabaseRequestTimeoutError || error instanceof TypeError) {
       return null;
     }
 
@@ -447,7 +455,7 @@ async function buildSessionForUser(
     return failedSession("workspace_not_available");
   } catch (error) {
     if (error instanceof SupabaseServerConfigError) {
-      return failedSession("profile_not_found");
+      return failedSession("supabase_not_configured");
     }
 
     throw error;
@@ -491,7 +499,7 @@ export async function resolveSessionByAuthIdentity(
     return buildSessionForUser(client, userOrFailure, requestedWorkspace, identity.authUserId);
   } catch (error) {
     if (error instanceof SupabaseServerConfigError) {
-      return failedSession("profile_not_found");
+      return failedSession("supabase_not_configured");
     }
 
     throw error;

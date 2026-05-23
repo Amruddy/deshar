@@ -18,10 +18,10 @@
 ## 1. Текущий статус
 
 - Текущий большой блок: `Release 1.0`.
-- Последний завершенный кодовый stage: `New Visual Design`.
-- Активный stage: `Functional UX Fixes Before Hardening`.
-- Активный план: `docs/work-plans/active/33-functional-ux-fixes-before-hardening-plan.md`.
-- Планируемая ветка текущего кодового stage: `feat/functional-ux-fixes-before-hardening`.
+- Последний завершенный кодовый stage: `Functional UX Fixes Before Hardening`, PR #56.
+- Активный stage: `Production Hardening`.
+- Активный план: `docs/work-plans/active/34-production-hardening-plan.md`.
+- Планируемая ветка текущего кодового stage: `feat/production-hardening`.
 - Предыдущий блок: `MPMF 1.0`, завершен и смержен в `main`.
 - Запись завершения MPMF 1.0: `docs/release/mpmf-1-release-readiness.md`.
 
@@ -84,7 +84,7 @@ Roadmap:
 
 ## 5. Активный подплан
 
-### Functional UX Fixes Before Hardening
+### Production Hardening
 
 Roadmap:
 
@@ -92,15 +92,15 @@ Roadmap:
 
 Активный stage:
 
-`Functional UX Fixes Before Hardening`
+`Production Hardening`
 
 Активный work plan:
 
-`docs/work-plans/active/33-functional-ux-fixes-before-hardening-plan.md`
+`docs/work-plans/active/34-production-hardening-plan.md`
 
 После него:
 
-`Production Hardening`
+`Release Candidate Smoke And Notes`
 
 ## 6. Следующие крупные stages Release 1.0
 

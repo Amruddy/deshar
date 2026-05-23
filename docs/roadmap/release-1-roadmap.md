@@ -120,7 +120,7 @@
 
 Статус:
 
-активный stage.
+завершен, PR #56.
 
 Цель:
 
@@ -147,7 +147,7 @@
 
 Статус:
 
-запланирован после `Functional UX Fixes Before Hardening`.
+активный stage.
 
 Цель:
 
@@ -179,4 +179,4 @@
 
 Следующий кодовый stage:
 
-`Functional UX Fixes Before Hardening`
+`Production Hardening`
