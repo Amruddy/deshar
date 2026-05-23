@@ -3,11 +3,28 @@ import { getTeacherHomework } from "@/app/lib/data/supabase-read";
 import { requireWorkspace } from "@/app/lib/dev-auth";
 import { createTeacherHomework, updateHomeworkStatus } from "@/app/teacher/actions";
 
-const HOMEWORK_STATUS_OPTIONS = [
-  { label: "Активно", value: "active" },
-  { label: "Отменено", value: "cancelled" },
-  { label: "Архив", value: "archived" },
-];
+function HomeworkStatusAction({
+  homeworkId,
+  label,
+  status,
+  variant = "secondary",
+}: {
+  homeworkId: string;
+  label: string;
+  status: "active" | "archived" | "cancelled";
+  variant?: "button" | "secondary";
+}) {
+  const saveStatus = updateHomeworkStatus.bind(null, homeworkId);
+
+  return (
+    <form action={saveStatus} className="inline-form">
+      <input name="status" type="hidden" value={status} />
+      <button className={`${variant === "button" ? "button" : "secondary-button"} compact-button`} type="submit">
+        {label}
+      </button>
+    </form>
+  );
+}
 
 export default async function TeacherHomeworkPage() {
   const session = await requireWorkspace("teacher");
@@ -127,25 +144,24 @@ export default async function TeacherHomeworkPage() {
                     ),
                 },
                 {
-                  header: "Статус",
-                  render: (homework) => {
-                    const saveStatus = updateHomeworkStatus.bind(null, homework.id);
-
-                    return (
-                      <form action={saveStatus} className="inline-form">
-                        <select name="status" defaultValue={homework.statusValue}>
-                          {HOMEWORK_STATUS_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                        <button className="secondary-button compact-button" type="submit">
-                          Сохранить
-                        </button>
-                      </form>
-                    );
-                  },
+                  header: "Действия",
+                  render: (homework) => (
+                    <div className="table-actions">
+                      <span className="status">{homework.status}</span>
+                      {homework.statusValue === "active" ? (
+                        <>
+                          <HomeworkStatusAction homeworkId={homework.id} label="Отменить" status="cancelled" />
+                          <HomeworkStatusAction homeworkId={homework.id} label="В архив" status="archived" />
+                        </>
+                      ) : null}
+                      {homework.statusValue === "cancelled" ? (
+                        <>
+                          <HomeworkStatusAction homeworkId={homework.id} label="Вернуть" status="active" />
+                          <HomeworkStatusAction homeworkId={homework.id} label="В архив" status="archived" />
+                        </>
+                      ) : null}
+                    </div>
+                  ),
                 },
               ]}
             />

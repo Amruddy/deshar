@@ -141,4 +141,4 @@
 
 Следующий stage большого релиза:
 
-`New Visual Design`
+`New Visual Design`, затем `Functional UX Fixes Before Hardening` перед `Production Hardening`.

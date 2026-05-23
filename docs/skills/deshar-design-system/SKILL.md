@@ -11,7 +11,7 @@ description: Use when changing Deshar UI, layout, CSS, pages, tables, forms, sta
 
 - `docs/roadmap/README.md`;
 - `docs/work-plans/active/README.md`;
-- `docs/work-plans/active/32-new-visual-design-plan.md`;
+- активный план, указанный в `docs/work-plans/active/README.md`;
 - `docs/specs/04-visual-rules.md`;
 - релевантные specs из `docs/specs/02-feature-specs/` и `docs/specs/03-technical-specs/`.
 

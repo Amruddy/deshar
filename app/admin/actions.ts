@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   archiveAdminCourse,
+  archiveAdminGroup,
   archiveAdminStudent,
   assignAdminStudentToGroup,
   createAdminCourse,
@@ -328,6 +329,25 @@ export async function updateGroup(groupId: string, formData: FormData) {
   revalidatePath("/admin/groups");
   revalidatePath(`/admin/groups/${groupId}`);
   redirectWithParams(`/admin/groups/${groupId}`, { actionMessage: "group_updated" });
+}
+
+export async function archiveGroup(groupId: string) {
+  const session = await requireAdmin("groups:write");
+
+  await runActionOrRedirect(`/admin/groups/${groupId}`, "group_archive_failed", () =>
+    archiveAdminGroup({
+      organizationId: session.organizationId,
+      groupId,
+    }),
+  );
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/groups");
+  revalidatePath(`/admin/groups/${groupId}`);
+  revalidatePath("/teacher");
+  revalidatePath("/teacher/groups");
+  revalidatePath("/student");
+  redirectWithParams(`/admin/groups/${groupId}`, { actionMessage: "group_archived" });
 }
 
 export async function createGroupScheduleRule(groupId: string, formData: FormData) {

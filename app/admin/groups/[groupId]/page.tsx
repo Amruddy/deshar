@@ -5,6 +5,7 @@ import { PageCreateAction } from "@/app/components/page-create-action";
 import { SubmitButton } from "@/app/components/submit-button";
 import {
   addStudentToGroup,
+  archiveGroup,
   createGroupScheduleRule,
   deleteScheduleRule,
   generateLessonsForGroup,
@@ -42,6 +43,7 @@ const weekdays = [
 ];
 
 const actionMessages: Record<string, string> = {
+  group_archived: "Группа перенесена в архив.",
   group_updated: "Группа обновлена.",
   lessons_generated: "Уроки по расписанию созданы.",
   lessons_unchanged: "Новых уроков не было: расписание уже материализовано для выбранного периода.",
@@ -51,6 +53,7 @@ const actionMessages: Record<string, string> = {
 };
 
 const actionErrors: Record<string, string> = {
+  group_archive_failed: "Не удалось архивировать группу. Проверьте права и подключение Supabase.",
   group_update_failed: "Не удалось обновить группу. Проверьте поля и подключение Supabase.",
   lessons_generate_failed: "Не удалось создать уроки. Проверьте расписание и подключение Supabase.",
   schedule_create_failed: "Не удалось сохранить расписание. Проверьте даты, время и подключение Supabase.",
@@ -83,6 +86,7 @@ export default async function AdminGroupPage({ params, searchParams }: AdminGrou
     >
       {(data) => {
         const updateGroupAction = updateGroup.bind(null, data.id);
+        const archiveGroupAction = archiveGroup.bind(null, data.id);
         const addStudentAction = addStudentToGroup.bind(null, data.id);
         const createScheduleRuleAction = createGroupScheduleRule.bind(null, data.id);
         const generateLessonsAction = generateLessonsForGroup.bind(null, data.id);
@@ -273,6 +277,16 @@ export default async function AdminGroupPage({ params, searchParams }: AdminGrou
                   <Link className="secondary-button compact-button" href="/admin/groups">
                     К списку групп
                   </Link>
+                  {data.statusValue !== "archived" ? (
+                    <form action={archiveGroupAction} className="inline-form">
+                      <ConfirmSubmitButton
+                        className="secondary-button compact-button"
+                        message="Перенести группу в архив? Учебная история, журнал, задания и оплаты сохранятся."
+                      >
+                        Архивировать
+                      </ConfirmSubmitButton>
+                    </form>
+                  ) : null}
                 </div>
               </aside>
             </section>

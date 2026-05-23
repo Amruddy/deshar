@@ -148,6 +148,7 @@ export async function createLessonHomework(lessonId: string, formData: FormData)
   revalidatePath(`/teacher/groups/${result.groupId}`);
   revalidatePath(`/teacher/groups/${result.groupId}/journal`);
   revalidatePath("/teacher/homework");
+  revalidatePath("/student");
   revalidatePath("/student/homework");
 }
 
@@ -161,6 +162,7 @@ export async function createGroupHomework(groupId: string, formData: FormData) {
   });
   revalidatePath(`/teacher/groups/${groupId}`);
   revalidatePath("/teacher/homework");
+  revalidatePath("/student");
   revalidatePath("/student/homework");
 }
 
@@ -172,6 +174,7 @@ export async function createTeacherHomework(formData: FormData) {
     organizationId: session.organizationId,
   });
   revalidatePath("/teacher/homework");
+  revalidatePath("/student");
   revalidatePath("/student/homework");
 }
 
@@ -184,6 +187,7 @@ export async function updateHomeworkStatus(homeworkId: string, formData: FormDat
     organizationId: session.organizationId,
   });
   revalidatePath("/teacher/homework");
+  revalidatePath("/student");
   revalidatePath("/student/homework");
   revalidatePath("/student/materials");
 }

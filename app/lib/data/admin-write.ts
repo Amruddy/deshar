@@ -941,6 +941,7 @@ export async function updateAdminGroup(input: UpdateGroupInput) {
   const result = await supabase
     .from("groups")
     .update({
+      archived_at: input.status === "archived" ? new Date().toISOString() : null,
       teacher_id: input.teacherId,
       name: input.name,
       status: input.status,
@@ -955,6 +956,27 @@ export async function updateAdminGroup(input: UpdateGroupInput) {
 
   if (!result.data) {
     throw new Error("Изменение группы: группа не найдена.");
+  }
+}
+
+export async function archiveAdminGroup(input: { organizationId: string; groupId: string }) {
+  const supabase = createSupabaseAdminClient();
+  const result = await supabase
+    .from("groups")
+    .update({
+      archived_at: new Date().toISOString(),
+      status: "archived",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.groupId)
+    .eq("organization_id", input.organizationId)
+    .select("id")
+    .maybeSingle();
+
+  assertWriteSuccess(result.error, "Архивирование группы");
+
+  if (!result.data) {
+    throw new Error("Архивирование группы: группа не найдена.");
   }
 }
 

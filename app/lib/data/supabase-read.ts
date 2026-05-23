@@ -702,6 +702,7 @@ export type TeacherJournalCell = {
   indicators: string[];
   isFuture: boolean;
   lessonId: string;
+  markValue: string;
   studentId: string;
 };
 
@@ -1187,6 +1188,24 @@ function normalizeAttendanceMark(value: string | null): TeacherJournalCell["atte
   return "";
 }
 
+function manualJournalMarkValue(entry: JournalEntryRow | undefined) {
+  const attendanceMark = normalizeAttendanceMark(entry?.attendance_mark ?? null);
+
+  if (attendanceMark === "present") {
+    return "П";
+  }
+
+  if (attendanceMark === "absent") {
+    return "Н";
+  }
+
+  if (attendanceMark === "excused") {
+    return "У";
+  }
+
+  return entry?.lesson_mark ?? "";
+}
+
 function attendanceTone(
   attendanceMark: TeacherJournalCell["attendanceMark"],
   isFuture: boolean,
@@ -1659,6 +1678,12 @@ function summarizeScheduleRules(scheduleRules: ScheduleRuleRow[]) {
     }));
 }
 
+function activeWorkspaceGroups(groups: GroupRow[], memberships: GroupStudentRow[]) {
+  const activeGroupIds = new Set(memberships.filter((item) => item.status === "active").map((item) => item.group_id));
+
+  return groups.filter((group) => activeGroupIds.has(group.id) && group.status !== "archived");
+}
+
 async function getBaseOrganizationData(client: SupabaseClient, organizationId: string) {
   const [organizationResult, coursesResult, groupsResult, studentsResult, membersResult] =
     await Promise.all([
@@ -2126,7 +2151,7 @@ export async function getAdminStudentDetail(organizationId: string, studentId: s
       .select("id,group_id,student_id,status,joined_at,left_at")
       .eq("student_id", student.id);
     const memberships = rows<GroupStudentRow>(groupStudentsResult, "Группы ученика");
-    const activeGroupIds = new Set(memberships.filter((item) => item.status === "active").map((item) => item.group_id));
+    const activeGroupIds = new Set(activeWorkspaceGroups(groups, memberships).map((group) => group.id));
     const groupIdList = [...new Set(memberships.map((item) => item.group_id))];
     const visibleGroups = groups.filter((group) => groupIdList.includes(group.id));
     const courseIds = new Set(visibleGroups.map((group) => group.course_id));
@@ -2466,7 +2491,7 @@ export async function getTeacherPayments(organizationId: string, email: string) 
   return readSupabaseData<TeacherPaymentsData>(async (client) => {
     const teacher = await getUserByEmail(client, email);
     const { courses, groups, students } = await getBaseOrganizationData(client, organizationId);
-    const teacherGroups = groups.filter((group) => group.teacher_id === teacher.id);
+    const teacherGroups = groups.filter((group) => group.teacher_id === teacher.id && group.status !== "archived");
     const groupIds = teacherGroups.map((group) => group.id);
     const [groupStudentsResult, paymentsResult] = await Promise.all([
       groupIds.length > 0
@@ -2544,7 +2569,7 @@ export async function getTeacherOverview(organizationId: string, email: string) 
   return readSupabaseData<TeacherOverviewData>(async (client) => {
     const teacher = await getUserByEmail(client, email);
     const { courses, groups, students } = await getBaseOrganizationData(client, organizationId);
-    const teacherGroups = groups.filter((group) => group.teacher_id === teacher.id);
+    const teacherGroups = groups.filter((group) => group.teacher_id === teacher.id && group.status !== "archived");
     const groupIds = teacherGroups.map((group) => group.id);
     const [groupStudentsResult, lessonsResult, paymentsResult] = await Promise.all([
       groupIds.length > 0
@@ -2554,6 +2579,7 @@ export async function getTeacherOverview(organizationId: string, email: string) 
         ? client
             .from("lessons")
             .select("id,course_id,group_id,teacher_id,starts_at,ends_at,topic")
+            .eq("organization_id", organizationId)
             .in("group_id", groupIds)
             .gte("starts_at", new Date().toISOString())
             .order("starts_at", { ascending: true })
@@ -2605,7 +2631,7 @@ export async function getTeacherGroups(organizationId: string, email: string) {
   return readSupabaseData<{ groups: TeacherGroupItem[] }>(async (client) => {
     const teacher = await getUserByEmail(client, email);
     const { courses, groups } = await getBaseOrganizationData(client, organizationId);
-    const teacherGroups = groups.filter((group) => group.teacher_id === teacher.id);
+    const teacherGroups = groups.filter((group) => group.teacher_id === teacher.id && group.status !== "archived");
     const groupIds = teacherGroups.map((group) => group.id);
     const [groupStudentsResult, lessonsResult, scheduleRulesResult, paymentsResult] = await Promise.all([
       groupIds.length > 0
@@ -2615,6 +2641,7 @@ export async function getTeacherGroups(organizationId: string, email: string) {
         ? client
             .from("lessons")
             .select("id,course_id,group_id,teacher_id,starts_at,ends_at,topic")
+            .eq("organization_id", organizationId)
             .in("group_id", groupIds)
             .gte("starts_at", new Date().toISOString())
             .order("starts_at", { ascending: true })
@@ -2970,6 +2997,7 @@ export async function getTeacherGroupJournal(organizationId: string, email: stri
               indicators,
               isFuture,
               lessonId: lesson.id,
+              markValue: manualJournalMarkValue(entry),
               studentId: item.student_id,
             };
           }),
@@ -3640,8 +3668,8 @@ export async function getStudentHomework(organizationId: string, email: string) 
       .select("id,group_id,student_id,status")
       .eq("student_id", student.id);
     const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Группы ученика");
-    const activeGroupIds = new Set(groupStudents.filter((item) => item.status === "active").map((item) => item.group_id));
-    const visibleGroups = groups.filter((group) => activeGroupIds.has(group.id));
+    const visibleGroups = activeWorkspaceGroups(groups, groupStudents);
+    const activeGroupIds = new Set(visibleGroups.map((group) => group.id));
     const [lessonsResult, homeworkResult, materialsResult] = await Promise.all([
       activeGroupIds.size > 0
         ? client
@@ -3738,8 +3766,8 @@ export async function getStudentMaterials(organizationId: string, email: string)
       .select("id,group_id,student_id,status")
       .eq("student_id", student.id);
     const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Группы ученика");
-    const activeGroupIds = new Set(groupStudents.filter((item) => item.status === "active").map((item) => item.group_id));
-    const visibleGroups = groups.filter((group) => activeGroupIds.has(group.id));
+    const visibleGroups = activeWorkspaceGroups(groups, groupStudents);
+    const activeGroupIds = new Set(visibleGroups.map((group) => group.id));
     const courseIds = new Set(visibleGroups.map((group) => group.course_id));
     const [lessonsResult, homeworkResult, materialsResult] = await Promise.all([
       activeGroupIds.size > 0
@@ -3777,14 +3805,19 @@ export async function getStudentMaterials(organizationId: string, email: string)
     const homeworkMap = byId(homework);
     const groupMap = byId(visibleGroups);
     const courseMap = byId(courses);
-    const visibleMaterials = materials.filter(
-      (item) =>
+    const visibleMaterials = materials.filter((item) => {
+      if (item.homework_id && !homeworkIds.has(item.homework_id)) {
+        return false;
+      }
+
+      return (
         item.student_id === student.id ||
         (item.group_id ? activeGroupIds.has(item.group_id) : false) ||
         (item.course_id ? courseIds.has(item.course_id) && !item.group_id && !item.student_id : false) ||
         (item.lesson_id ? lessonIds.has(item.lesson_id) : false) ||
-        (item.homework_id ? homeworkIds.has(item.homework_id) : false),
-    );
+        (item.homework_id ? homeworkIds.has(item.homework_id) : false)
+      );
+    });
 
     function materialContext(item: MaterialRow) {
       if (item.homework_id && homeworkMap.has(item.homework_id)) {
@@ -3842,8 +3875,8 @@ export async function getStudentOverview(organizationId: string, email: string) 
       .select("id,group_id,student_id,status")
       .eq("student_id", student.id);
     const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Группы ученика");
-    const activeGroupIds = new Set(groupStudents.filter((item) => item.status === "active").map((item) => item.group_id));
-    const visibleGroups = groups.filter((group) => activeGroupIds.has(group.id));
+    const visibleGroups = activeWorkspaceGroups(groups, groupStudents);
+    const activeGroupIds = new Set(visibleGroups.map((group) => group.id));
     const courseIds = new Set(visibleGroups.map((group) => group.course_id));
     const courseMap = byId(courses);
     const groupMap = byId(visibleGroups);
@@ -3924,14 +3957,19 @@ export async function getStudentOverview(organizationId: string, email: string) 
         (item.lesson_id ? lessonIds.has(item.lesson_id) : false),
     );
     const homeworkIds = new Set(homework.map((item) => item.id));
-    const materials = rows<MaterialRow>(materialsResult, "Материалы ученика").filter(
-      (item) =>
+    const materials = rows<MaterialRow>(materialsResult, "Материалы ученика").filter((item) => {
+      if (item.homework_id && !homeworkIds.has(item.homework_id)) {
+        return false;
+      }
+
+      return (
         item.student_id === student.id ||
         (item.group_id ? activeGroupIds.has(item.group_id) : false) ||
         (item.course_id ? courseIds.has(item.course_id) && !item.group_id && !item.student_id : false) ||
         (item.lesson_id ? lessonIds.has(item.lesson_id) : false) ||
-        (item.homework_id ? homeworkIds.has(item.homework_id) : false),
-    );
+        (item.homework_id ? homeworkIds.has(item.homework_id) : false)
+      );
+    });
     const progress = rows<ProgressRuleRow>(progressResult, "Прогресс ученика");
     const progressRecords = rows<ProgressRecordRow>(recordsResult, "Записи прогресса ученика");
     const payments = rows<PaymentRow>(paymentsResult, "Оплата ученика");
@@ -3991,8 +4029,8 @@ export async function getStudentSchedule(organizationId: string, email: string) 
       .select("id,group_id,student_id,status")
       .eq("student_id", student.id);
     const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Группы расписания ученика");
-    const activeGroupIds = new Set(groupStudents.filter((item) => item.status === "active").map((item) => item.group_id));
-    const visibleGroups = groups.filter((group) => activeGroupIds.has(group.id));
+    const visibleGroups = activeWorkspaceGroups(groups, groupStudents);
+    const activeGroupIds = new Set(visibleGroups.map((group) => group.id));
     const [lessonsResult, scheduleRulesResult] =
       activeGroupIds.size > 0
         ? await Promise.all([
@@ -4055,8 +4093,8 @@ export async function getStudentAttendance(organizationId: string, email: string
       .select("id,group_id,student_id,status")
       .eq("student_id", student.id);
     const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Группы посещаемости ученика");
-    const activeGroupIds = new Set(groupStudents.filter((item) => item.status === "active").map((item) => item.group_id));
-    const visibleGroups = groups.filter((group) => activeGroupIds.has(group.id));
+    const visibleGroups = activeWorkspaceGroups(groups, groupStudents);
+    const activeGroupIds = new Set(visibleGroups.map((group) => group.id));
     const lessonsResult =
       activeGroupIds.size > 0
         ? await client
@@ -4101,15 +4139,16 @@ export async function getStudentAttendance(organizationId: string, email: string
         timeRange: `${formatTimeOfDate(lesson.starts_at)}-${formatTimeOfDate(lesson.ends_at)}`,
       };
     });
-    const absentCount = attendance.filter((item) => item.status === "absent").length;
-    const excusedCount = attendance.filter((item) => item.status === "excused").length;
+    const recordedAttendance = attendance.filter((item) => item.status !== "unknown");
+    const absentCount = recordedAttendance.filter((item) => item.status === "absent").length;
+    const excusedCount = recordedAttendance.filter((item) => item.status === "excused").length;
 
     return {
-      attendance,
+      attendance: recordedAttendance,
       groups: visibleGroups.map((group) => `${group.name} - ${courseMap.get(group.course_id)?.name ?? "курс"}`),
       metrics: [
-        { label: "Занятий", value: String(attendance.length) },
-        { label: "Присутствовал", value: String(attendance.filter((item) => item.status === "present").length) },
+        { label: "Отмечено", value: String(recordedAttendance.length), detail: lessons.length > recordedAttendance.length ? "неотмеченные уроки скрыты" : undefined },
+        { label: "Присутствовал", value: String(recordedAttendance.filter((item) => item.status === "present").length) },
         {
           label: "Пропуски",
           value: String(absentCount + excusedCount),
@@ -4137,8 +4176,8 @@ export async function getStudentProgress(organizationId: string, email: string) 
       .select("id,group_id,student_id,status")
       .eq("student_id", student.id);
     const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Группы ученика");
-    const activeGroupIds = new Set(groupStudents.filter((item) => item.status === "active").map((item) => item.group_id));
-    const visibleGroups = groups.filter((group) => activeGroupIds.has(group.id));
+    const visibleGroups = activeWorkspaceGroups(groups, groupStudents);
+    const activeGroupIds = new Set(visibleGroups.map((group) => group.id));
     const courseIds = new Set(visibleGroups.map((group) => group.course_id));
     const courseIdList = [...courseIds];
     const [rulesResult, errorsResult, recordsResult, lessonsResult] = await Promise.all([
