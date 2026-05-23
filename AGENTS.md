@@ -83,8 +83,12 @@ The current active implementation source of truth is named in:
 
 Current active technical plan:
 
-`docs/work-plans/active/33-functional-ux-fixes-before-hardening-plan.md`
+No active technical plan is selected.
 
 Use the roadmap and `docs/work-plans/active/README.md` to determine whether a
 stage is active. If no active plan is selected, create or update the next stage
 plan before coding.
+
+Next expected technical plan before code:
+
+`Release 1.0 Performance Baseline And Supabase Optimization`

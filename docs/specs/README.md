@@ -2,7 +2,9 @@
 
 Этот каталог хранит актуальные спецификации Deshar.
 
-`MPMF 1.0` завершен. Текущий большой блок разработки - `Release 1.0`: настоящие аккаунты, production auth, финальный UI/UX polish и release hardening.
+`MPMF 1.0` завершен. Текущий большой блок разработки - `Release 1.0`:
+настоящие аккаунты, production auth, финальный UI/UX polish, release hardening,
+release candidate smoke и следующий performance/Supabase optimization stage.
 
 `MPMF` означает `Minimum Product-Market Fit`: первая полноценная рабочая
 версия, которой могут пользоваться администратор, преподаватель и ученик.
@@ -19,9 +21,11 @@
    валидация.
    Для `Release 1.0` отдельным источником для настоящих аккаунтов является
    `03-technical-specs/production-auth.md`.
+   Для этапов ускорения приложения отдельным источником является
+   `03-technical-specs/performance-and-supabase.md`.
 7. `04-interface-by-role.md` и `04-visual-rules.md` - интерфейс по ролям и
-   визуальные правила. Эти документы должны быть пересмотрены перед финальным
-   design polish stage в `Release 1.0`.
+   визуальные правила. После завершенных design stages будущие изменения UI
+   должны идти через отдельный active plan.
 8. `05-user-stories.md` - проверяемые пользовательские истории.
 
 ## Главное правило
