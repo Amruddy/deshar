@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { AppNavLink, type NavIcon } from "@/app/components/app-nav-link";
-import { getAppSession, workspaceConfig, type AppSession, type WorkspaceRole } from "@/app/lib/dev-auth";
+import { getAppSession, isSoloTeacherSession, workspaceConfig, type AppSession, type WorkspaceRole } from "@/app/lib/dev-auth";
 import { logout, switchWorkspace } from "@/app/login/actions";
 
 type NavItem = {
@@ -40,6 +40,16 @@ const navByWorkspace: Record<WorkspaceRole, NavItem[]> = {
 };
 
 const publicNav: NavItem[] = [{ href: "/", icon: "login", label: "Вход" }];
+
+function navItemsForSession(session: AppSession) {
+  const items = navByWorkspace[session.activeWorkspace];
+
+  if (session.activeWorkspace === "admin" && isSoloTeacherSession(session)) {
+    return items.filter((item) => item.href !== "/admin/teachers");
+  }
+
+  return items;
+}
 
 function WorkspaceSwitcher({ session }: { session: AppSession }) {
   if (session.roles.length < 2) {
@@ -120,7 +130,7 @@ function MobileNav({ items }: { items: NavItem[] }) {
 
 export async function AppShell({ children }: { children: ReactNode }) {
   const session = await getAppSession();
-  const items = session ? navByWorkspace[session.activeWorkspace] : publicNav;
+  const items = session ? navItemsForSession(session) : publicNav;
 
   if (!session) {
     return (

@@ -18,11 +18,10 @@
 ## 1. Текущий статус
 
 - Текущий большой блок: `Release 1.0`.
-- Последний завершенный кодовый stage: `Release Candidate Smoke And Notes`, PR #59.
-- Активный stage: `Release 1.0 Performance Baseline And Supabase Optimization`.
-- Активный план: `docs/work-plans/active/36-performance-baseline-supabase-plan.md`.
-- Первый блок active stage: baseline быстродействия, Supabase-запросов и
-  тяжелых маршрутов.
+- Последний завершенный кодовый stage: `Release 1.0 Performance Baseline And Supabase Optimization`, PR #61.
+- Активный stage: `Release 1.0 Public Registration And Solo Teacher`.
+- Активный план: `docs/work-plans/active/37-public-registration-solo-teacher-plan.md`.
+- Первый блок active stage: публичная регистрация школы, регистрация преподавателя-одиночки и email confirmation.
 - Предыдущий блок: `MPMF 1.0`, завершен и смержен в `main`.
 - Запись завершения MPMF 1.0: `docs/release/mpmf-1-release-readiness.md`.
 - Запись завершения Production Hardening: `docs/release/release-1-production-hardening.md`.
@@ -90,7 +89,7 @@ design/performance stages и не смешиваться с правками м�
 
 ## 5. Следующий подплан
 
-### Release 1.0 Performance Baseline And Supabase Optimization
+### Release 1.0 Public Registration And Solo Teacher
 
 Roadmap:
 
@@ -98,13 +97,13 @@ Roadmap:
 
 Активный stage:
 
-`Release 1.0 Performance Baseline And Supabase Optimization`
+`Release 1.0 Public Registration And Solo Teacher`
 
 Активный work plan:
 
-`docs/work-plans/active/36-performance-baseline-supabase-plan.md`
+`docs/work-plans/active/37-public-registration-solo-teacher-plan.md`
 
-Runtime-оптимизации выполняются только после измеренного baseline.
+Stage добавляет production-регистрацию владельца новой школы и преподавателя-одиночки.
 
 ## 6. Следующие крупные stages Release 1.0
 
@@ -117,5 +116,5 @@ Runtime-оптимизации выполняются только после и
 7. `Functional UX Fixes Before Hardening`.
 8. `Production Hardening` - завершен, PR #57.
 9. `Release Candidate Smoke And Notes` - завершен, PR #59.
-10. `Release 1.0 Performance Baseline And Supabase Optimization` - активный
-    stage.
+10. `Release 1.0 Performance Baseline And Supabase Optimization` - завершен, PR #61.
+11. `Release 1.0 Public Registration And Solo Teacher` - активный stage.

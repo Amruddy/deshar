@@ -11,6 +11,7 @@ import {
 } from "@/app/lib/supabase/server";
 
 export type WorkspaceRole = "admin" | "teacher" | "student";
+export type MemberRole = WorkspaceRole | "solo_teacher" | "director";
 
 export type Permission =
   | "admin:access"
@@ -42,7 +43,7 @@ export const workspaceConfig: Record<
   },
 };
 
-const adminPermissions = [
+export const adminPermissions = [
   "admin:access",
   "courses:write",
   "groups:write",
@@ -82,6 +83,8 @@ export const devUsers = {
     email: "solo-teacher@example.test",
     preferredWorkspace: "teacher",
     roles: ["teacher", "admin"],
+    memberRoles: ["solo_teacher", "teacher", "admin"],
+    organizationType: "solo_teacher",
     permissions: [...adminPermissions, "journal:write:any"],
   },
 } as const satisfies Record<
@@ -90,6 +93,8 @@ export const devUsers = {
     userId: string;
     label: string;
     email: string;
+    memberRoles?: readonly MemberRole[];
+    organizationType?: string;
     preferredWorkspace: WorkspaceRole;
     roles: readonly WorkspaceRole[];
     permissions: readonly Permission[];
@@ -104,6 +109,8 @@ export type DevSession = {
   email: string;
   organizationId: string;
   organizationName: string;
+  organizationType: string;
+  memberRoles: MemberRole[];
   roles: WorkspaceRole[];
   permissions: Permission[];
   activeWorkspace: WorkspaceRole;
@@ -135,6 +142,7 @@ type AppMemberRow = {
 type AppOrganizationRow = {
   name: string;
   status: string;
+  type: string | null;
 };
 
 export type SupabaseAuthIdentity = {
@@ -170,6 +178,10 @@ function isWorkspaceRole(value: string | undefined): value is WorkspaceRole {
   return value === "admin" || value === "teacher" || value === "student";
 }
 
+function isMemberRole(value: string | undefined): value is MemberRole {
+  return isWorkspaceRole(value) || value === "solo_teacher" || value === "director";
+}
+
 function findDevUserByEmail(email: string) {
   return Object.entries(devUsers).find(([, user]) => user.email === email) ?? null;
 }
@@ -186,6 +198,10 @@ export function hasPermission(subject: { permissions: readonly Permission[] }, p
   return subject.permissions.includes(permission);
 }
 
+export function isSoloTeacherSession(session: Pick<AppSession, "memberRoles" | "organizationType">) {
+  return session.organizationType === "solo_teacher" || session.memberRoles.includes("solo_teacher");
+}
+
 export function isDevAuthEnabled() {
   return process.env.NODE_ENV !== "production" && process.env.DESHAR_ENABLE_DEV_AUTH === "1";
 }
@@ -196,6 +212,14 @@ function parseWorkspaceRoles(value: unknown): WorkspaceRole[] {
   }
 
   return value.filter((item): item is WorkspaceRole => typeof item === "string" && isWorkspaceRole(item));
+}
+
+function parseMemberRoles(value: unknown): MemberRole[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((item): item is MemberRole => typeof item === "string" && isMemberRole(item));
 }
 
 function parsePermissions(value: unknown): Permission[] {
@@ -220,9 +244,13 @@ function getAccessibleWorkspaces(subject: WorkspaceAccessSubject): WorkspaceRole
   return workspacePriority.filter((workspace) => hasWorkspaceAccess(subject, workspace));
 }
 
-function chooseWorkspace(subject: WorkspaceAccessSubject, requestedWorkspace?: WorkspaceRole) {
+function chooseWorkspace(subject: WorkspaceAccessSubject, requestedWorkspace?: WorkspaceRole, preferredWorkspace?: WorkspaceRole) {
   if (requestedWorkspace && hasWorkspaceAccess(subject, requestedWorkspace)) {
     return requestedWorkspace;
+  }
+
+  if (preferredWorkspace && hasWorkspaceAccess(subject, preferredWorkspace)) {
+    return preferredWorkspace;
   }
 
   return getAccessibleWorkspaces(subject)[0] ?? null;
@@ -421,15 +449,17 @@ async function buildSessionForUser(
 
     for (const member of members) {
       const roles = parseWorkspaceRoles(member.roles);
+      const memberRoles = parseMemberRoles(member.roles);
       const permissions = parsePermissions(member.permissions);
-      const activeWorkspace = chooseWorkspace({ permissions, roles }, requestedWorkspace);
+      const preferredWorkspace = memberRoles.includes("solo_teacher") ? "teacher" : undefined;
+      const activeWorkspace = chooseWorkspace({ permissions, roles }, requestedWorkspace, preferredWorkspace);
 
       if (!activeWorkspace) {
         continue;
       }
 
       const organization = getSingleRow(
-        await client.from("organizations").select("name,status").eq("id", member.organization_id).maybeSingle(),
+        await client.from("organizations").select("name,status,type").eq("id", member.organization_id).maybeSingle(),
         "Организация пользователя",
       ) as AppOrganizationRow | null;
 
@@ -445,6 +475,8 @@ async function buildSessionForUser(
           name: activeUser.name,
           organizationId: member.organization_id,
           organizationName: organization.name,
+          organizationType: organization.type ?? "school",
+          memberRoles,
           permissions,
           roles,
           userId: activeUser.id,
@@ -523,6 +555,7 @@ async function getDevCookieSession(): Promise<DevSession | null> {
 
   const [, user] = entry;
   const roles = [...user.roles];
+  const memberRoles = [...("memberRoles" in user ? user.memberRoles : user.roles)];
   const permissions = [...user.permissions];
   const selectedWorkspace =
     isWorkspaceRole(activeWorkspace) && hasWorkspaceAccess({ permissions, roles }, activeWorkspace)
@@ -539,6 +572,8 @@ async function getDevCookieSession(): Promise<DevSession | null> {
     email: user.email,
     organizationId: "00000000-0000-4000-8000-000000000001",
     organizationName: "Deshar",
+    organizationType: "organizationType" in user ? user.organizationType : "school",
+    memberRoles,
     roles,
     permissions,
     activeWorkspace: selectedWorkspace,

@@ -2,10 +2,11 @@
 
 ## 0. Статус
 
-- Статус плана: активная реализация.
+- Статус плана: завершен, PR #61.
 - Большой блок: `Release 1.0`.
 - Stage релиза: `Release Stage 8. Performance Baseline And Supabase Optimization`.
 - Рабочая ветка: `feat/performance-baseline-supabase`.
+- Коммит stage: `f04b3ed`.
 - Предыдущий завершенный plan: `../completed/35-release-candidate-smoke-and-notes-plan.md`.
 - Roadmap релиза: `docs/roadmap/release-1-roadmap.md`.
 - Техническая спецификация: `docs/specs/03-technical-specs/performance-and-supabase.md`.

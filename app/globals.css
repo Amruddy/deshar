@@ -410,6 +410,38 @@ button {
   grid-template-columns: 1fr;
 }
 
+.registration-panel {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 14px;
+}
+
+.registration-heading {
+  display: grid;
+  gap: 4px;
+}
+
+.registration-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap);
+}
+
+.registration-form {
+  align-content: start;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.registration-form-intro {
+  grid-column: 1 / -1;
+}
+
+.registration-form-intro h3 {
+  margin: 0 0 6px;
+}
+
 .single-column-form {
   grid-template-columns: 1fr;
 }
@@ -1166,6 +1198,11 @@ body:has(.entry-shell) .main {
   align-items: end;
   gap: 12px;
   margin-top: 12px;
+}
+
+.form-grid.registration-form {
+  grid-template-columns: 1fr;
+  margin-top: 0;
 }
 
 .form-grid label {
@@ -2816,6 +2853,7 @@ td a,
   .admin-detail-grid,
   .entry-hero,
   .login-workspace,
+  .registration-options,
   .overview-grid,
   .student-overview-grid,
   .teacher-progress-layout,

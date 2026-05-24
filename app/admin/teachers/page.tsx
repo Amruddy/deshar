@@ -1,9 +1,10 @@
+import { redirect } from "next/navigation";
 import { createTeacher, disableTeacherAccess, inviteTeacherAccess } from "@/app/admin/actions";
 import { ConfirmSubmitButton } from "@/app/components/confirm-submit-button";
 import { PageCreateAction } from "@/app/components/page-create-action";
 import { DataTable, MetricGrid, SupabaseDataPage } from "@/app/components/supabase-data-page";
 import { getAdminTeachers, type AdminTeacherItem } from "@/app/lib/data/supabase-read";
-import { requireWorkspace } from "@/app/lib/dev-auth";
+import { isSoloTeacherSession, requireWorkspace } from "@/app/lib/dev-auth";
 
 type AdminTeachersPageProps = {
   searchParams: Promise<{
@@ -56,6 +57,11 @@ function TeacherAccessAction({ currentUserId, teacher }: { currentUserId: string
 
 export default async function AdminTeachersPage({ searchParams }: AdminTeachersPageProps) {
   const session = await requireWorkspace("admin");
+
+  if (isSoloTeacherSession(session)) {
+    redirect("/forbidden?required=teachers");
+  }
+
   const params = await searchParams;
   const accessMessage = params.accessMessage ? accessMessages[params.accessMessage] : null;
   const accessError = params.accessError ? accessErrors[params.accessError] ?? accessErrors.invite_failed : null;
