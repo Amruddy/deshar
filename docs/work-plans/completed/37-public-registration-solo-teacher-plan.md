@@ -2,10 +2,12 @@
 
 ## 0. Статус
 
-- Статус плана: активная реализация.
+- Статус плана: завершен, PR #62.
 - Большой блок: `Release 1.0`.
 - Stage релиза: `Release Stage 9. Public Registration And Solo Teacher`.
 - Рабочая ветка: `feat/public-registration-solo-teacher`.
+- Коммит stage: `0901948`.
+- Merge commit: `0e8153e`.
 - Предыдущий завершенный plan: `../completed/36-performance-baseline-supabase-plan.md`.
 - Roadmap релиза: `docs/roadmap/release-1-roadmap.md`.
 - Технические спецификации: `docs/specs/03-technical-specs/production-auth.md`, `docs/specs/03-technical-specs/permissions.md`, `docs/specs/03-technical-specs/pages-and-routes.md`.

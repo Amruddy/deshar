@@ -2,6 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { hasSupabaseAuthStorageCookie, SupabasePublicConfigError, readSupabasePublicEnv } from "@/app/lib/supabase/env";
 import {
   createSupabaseAdminClient,
@@ -134,6 +135,7 @@ type AppUserRow = {
 
 type AppMemberRow = {
   organization_id: string;
+  organizations: AppOrganizationRow | AppOrganizationRow[] | null;
   permissions: unknown;
   roles: unknown;
   status: string;
@@ -338,6 +340,14 @@ function getRows<T>(result: { data: T[] | null; error: { message: string } | nul
   return result.data ?? [];
 }
 
+function memberOrganization(value: AppMemberRow["organizations"]) {
+  if (Array.isArray(value)) {
+    return value[0] ?? null;
+  }
+
+  return value;
+}
+
 function readySession(session: AppSession): SessionResolutionResult {
   return { failure: null, session };
 }
@@ -353,9 +363,21 @@ function normalizeEmail(email: string) {
 const appUserSelect = "id,name,email,status,auth_user_id,auth_status";
 
 async function updateSignedInUser(client: ReturnType<typeof createSupabaseAdminClient>, user: AppUserRow, authUserId?: string) {
-  const update: Partial<Pick<AppUserRow, "auth_status" | "auth_user_id">> & { last_sign_in_at: string } = {
+  const shouldLinkAuthUser = Boolean(authUserId && !user.auth_user_id);
+  const shouldActivate = user.auth_status !== "active";
+
+  if (!shouldLinkAuthUser && !shouldActivate) {
+    return user;
+  }
+
+  const now = new Date().toISOString();
+  const update: Partial<Pick<AppUserRow, "auth_status" | "auth_user_id">> & {
+    last_sign_in_at: string;
+    updated_at: string;
+  } = {
     auth_status: "active",
-    last_sign_in_at: new Date().toISOString(),
+    last_sign_in_at: now,
+    updated_at: now,
   };
 
   if (authUserId && !user.auth_user_id) {
@@ -437,7 +459,7 @@ async function buildSessionForUser(
     const members = getRows(
       await client
         .from("organization_members")
-        .select("organization_id,roles,permissions,status")
+        .select("organization_id,roles,permissions,status,organizations(name,status,type)")
         .eq("user_id", activeUser.id)
         .eq("status", "active"),
       "Рабочие области пользователя",
@@ -458,10 +480,7 @@ async function buildSessionForUser(
         continue;
       }
 
-      const organization = getSingleRow(
-        await client.from("organizations").select("name,status,type").eq("id", member.organization_id).maybeSingle(),
-        "Организация пользователя",
-      ) as AppOrganizationRow | null;
+      const organization = memberOrganization(member.organizations);
 
       if (!organization || organization.status !== "active") {
         continue;
@@ -584,7 +603,7 @@ export async function getAppSession(): Promise<AppSession | null> {
   return (await getAppSessionResult()).session;
 }
 
-export async function getAppSessionResult(): Promise<SessionResolutionResult> {
+async function resolveAppSessionResult(): Promise<SessionResolutionResult> {
   const supabaseIdentity = await getSupabaseAuthIdentity();
 
   if (supabaseIdentity) {
@@ -599,6 +618,8 @@ export async function getAppSessionResult(): Promise<SessionResolutionResult> {
 
   return session ? readySession(session) : failedSession("signed_out");
 }
+
+export const getAppSessionResult = cache(resolveAppSessionResult);
 
 export async function getDevSession(): Promise<DevSession | null> {
   return getAppSession();
