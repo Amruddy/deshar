@@ -5,7 +5,7 @@ import { requireWorkspace } from "@/app/lib/dev-auth";
 
 export default async function TeacherGroupsPage() {
   const session = await requireWorkspace("teacher");
-  const result = await getTeacherGroups(session.organizationId, session.email);
+  const result = await getTeacherGroups(session.organizationId, session.userId);
 
   return (
     <SupabaseDataPage

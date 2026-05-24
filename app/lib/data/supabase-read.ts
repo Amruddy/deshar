@@ -1322,6 +1322,7 @@ async function ensureTeacherGroupLessonsForMonth(
   organizationId: string,
   group: GroupRow,
   monthValue: string,
+  preloadedRules?: ScheduleRuleRow[],
 ) {
   if (!group.teacher_id) {
     return 0;
@@ -1329,29 +1330,30 @@ async function ensureTeacherGroupLessonsForMonth(
 
   const monthStart = `${monthValue}-01`;
   const monthEnd = addDaysToDateValue(`${addMonthValue(monthValue, 1)}-01`, -1);
-  const [rulesResult, existingResult] = await Promise.all([
-    client
-      .from("schedule_rules")
-      .select("id,target_type,target_id,weekday,start_time,end_time,starts_on,ends_on,status")
-      .eq("organization_id", organizationId)
-      .eq("target_type", "group")
-      .eq("target_id", group.id)
-      .eq("status", "active"),
-    client
-      .from("lessons")
-      .select("schedule_rule_id,starts_at")
-      .eq("organization_id", organizationId)
-      .eq("group_id", group.id)
-      .gte("starts_at", monthBoundaryIso(monthValue))
-      .lt("starts_at", monthBoundaryIso(addMonthValue(monthValue, 1))),
-  ]);
-
-  const rules = rows<ScheduleRuleRow>(rulesResult, "Расписание журнала группы");
+  const rules =
+    preloadedRules ??
+    rows<ScheduleRuleRow>(
+      await client
+        .from("schedule_rules")
+        .select("id,target_type,target_id,weekday,start_time,end_time,starts_on,ends_on,status")
+        .eq("organization_id", organizationId)
+        .eq("target_type", "group")
+        .eq("target_id", group.id)
+        .eq("status", "active"),
+      "Расписание журнала группы",
+    );
 
   if (rules.length === 0) {
     return 0;
   }
 
+  const existingResult = await client
+    .from("lessons")
+    .select("schedule_rule_id,starts_at")
+    .eq("organization_id", organizationId)
+    .eq("group_id", group.id)
+    .gte("starts_at", monthBoundaryIso(monthValue))
+    .lt("starts_at", monthBoundaryIso(addMonthValue(monthValue, 1)));
   const existingSlots = new Set(
     rows<{ schedule_rule_id: string | null; starts_at: string }>(existingResult, "Проверка уроков журнала")
       .filter((lesson) => lesson.schedule_rule_id)
@@ -2781,12 +2783,25 @@ export async function getTeacherOverview(organizationId: string, email: string) 
   });
 }
 
-export async function getTeacherGroups(organizationId: string, email: string) {
+export async function getTeacherGroups(organizationId: string, teacherId: string) {
   return readSupabaseData<{ groups: TeacherGroupItem[] }>(async (client) => {
-    const teacher = await getUserByEmail(client, email);
-    const { courses, groups } = await getBaseOrganizationData(client, organizationId);
-    const teacherGroups = groups.filter((group) => group.teacher_id === teacher.id && group.status !== "archived");
+    const teacherGroupsResult = await client
+      .from("groups")
+      .select("id,course_id,teacher_id,name,status")
+      .eq("organization_id", organizationId)
+      .eq("teacher_id", teacherId)
+      .neq("status", "archived");
+    const teacherGroups = rows<GroupRow>(teacherGroupsResult, "Группы преподавателя");
     const groupIds = teacherGroups.map((group) => group.id);
+    const courseIds = Array.from(new Set(teacherGroups.map((group) => group.course_id)));
+    const coursesResult =
+      courseIds.length > 0
+        ? await client
+            .from("courses")
+            .select("id,name,description,type,format,lesson_mark_scale,status")
+            .eq("organization_id", organizationId)
+            .in("id", courseIds)
+        : { data: [], error: null };
     const [groupStudentsResult, lessonsResult, scheduleRulesResult, paymentsResult] = await Promise.all([
       groupIds.length > 0
         ? client.from("group_students").select("id,group_id,student_id,status").in("group_id", groupIds)
@@ -2799,6 +2814,7 @@ export async function getTeacherGroups(organizationId: string, email: string) {
             .in("group_id", groupIds)
             .gte("starts_at", new Date().toISOString())
             .order("starts_at", { ascending: true })
+            .limit(Math.min(Math.max(groupIds.length * 8, 20), 200))
         : Promise.resolve({ data: [], error: null }),
       groupIds.length > 0
         ? client
@@ -2809,11 +2825,15 @@ export async function getTeacherGroups(organizationId: string, email: string) {
             .in("target_id", groupIds)
             .eq("status", "active")
         : Promise.resolve({ data: [], error: null }),
-      client
-        .from("payments")
-        .select("id,student_id,course_id,group_id,amount,currency,period_start,period_end,due_at,status")
-        .eq("organization_id", organizationId),
+      groupIds.length > 0
+        ? client
+            .from("payments")
+            .select("id,student_id,course_id,group_id,amount,currency,period_start,period_end,due_at,status")
+            .eq("organization_id", organizationId)
+            .in("status", ["pending", "overdue"])
+        : Promise.resolve({ data: [], error: null }),
     ]);
+    const courses = rows<CourseRow>(coursesResult, "Курсы преподавателя");
     const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Состав групп преподавателя");
     const lessons = rows<LessonRow>(lessonsResult, "Занятия групп преподавателя");
     const scheduleRules = rows<ScheduleRuleRow>(scheduleRulesResult, "Расписание групп преподавателя");
@@ -2853,13 +2873,27 @@ export async function getTeacherGroups(organizationId: string, email: string) {
 
 export async function getTeacherAttendance(
   organizationId: string,
-  email: string,
+  teacherId: string,
   filters: TeacherAttendanceFilters = {},
 ) {
   return readSupabaseData<TeacherAttendanceData>(async (client) => {
-    const teacher = await getUserByEmail(client, email);
-    const { courses, groups, students } = await getBaseOrganizationData(client, organizationId);
-    const teacherGroups = groups.filter((group) => group.teacher_id === teacher.id && group.status !== "archived");
+    const teacherGroupsResult = await client
+      .from("groups")
+      .select("id,course_id,teacher_id,name,status")
+      .eq("organization_id", organizationId)
+      .eq("teacher_id", teacherId)
+      .neq("status", "archived");
+    const teacherGroups = rows<GroupRow>(teacherGroupsResult, "Группы посещаемости преподавателя");
+    const courseIds = Array.from(new Set(teacherGroups.map((group) => group.course_id)));
+    const coursesResult =
+      courseIds.length > 0
+        ? await client
+            .from("courses")
+            .select("id,name,description,type,format,lesson_mark_scale,status")
+            .eq("organization_id", organizationId)
+            .in("id", courseIds)
+        : { data: [], error: null };
+    const courses = rows<CourseRow>(coursesResult, "Курсы посещаемости преподавателя");
     const groupOptions = teacherGroups
       .map((group) => ({
         label: `${group.name} - ${courses.find((course) => course.id === group.course_id)?.name ?? "курс"}`,
@@ -2895,13 +2929,22 @@ export async function getTeacherAttendance(
     );
     const lessonIds = lessons.map((lesson) => lesson.id);
     const activeStudentIds = new Set(groupStudents.map((item) => item.student_id));
-    const journalResult =
+    const [studentsResult, journalResult] = await Promise.all([
+      activeStudentIds.size > 0
+        ? client
+            .from("students")
+            .select("id,user_id,name,phone,email,status")
+            .eq("organization_id", organizationId)
+            .in("id", [...activeStudentIds])
+        : Promise.resolve({ data: [], error: null }),
       lessonIds.length > 0
-        ? await client
+        ? client
             .from("journal_entries")
             .select("id,lesson_id,student_id,attendance_mark,lesson_mark,teacher_comment,internal_comment,is_visible_to_student")
             .in("lesson_id", lessonIds)
-        : { data: [], error: null };
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+    const students = rows<StudentRow>(studentsResult, "Ученики посещаемости преподавателя");
     const journalEntries = rows<JournalEntryRow>(journalResult, "Записи посещаемости преподавателя").filter((entry) =>
       activeStudentIds.has(entry.student_id),
     );
@@ -3203,30 +3246,24 @@ export async function getTeacherGroupDetail(organizationId: string, email: strin
   });
 }
 
-export async function getTeacherGroupJournal(organizationId: string, email: string, groupId: string, month: string | null | undefined) {
+export async function getTeacherGroupJournal(
+  organizationId: string,
+  teacherId: string,
+  teacherName: string,
+  groupId: string,
+  month: string | null | undefined,
+) {
   return readSupabaseData<TeacherGroupJournalData>(async (client) => {
-    const teacher = await getUserByEmail(client, email);
-    const { courses, groups, students, users } = await getBaseOrganizationData(client, organizationId);
-    const group = groups.find((item) => item.id === groupId && item.teacher_id === teacher.id);
-
-    if (!group) {
-      throw new Error("Группа: запись не найдена.");
-    }
-
     const monthValue = normalizeMonthValue(month);
     const nextMonth = addMonthValue(monthValue, 1);
-    await ensureTeacherGroupLessonsForMonth(client, organizationId, group, monthValue);
-
-    const [lessonsResult, groupStudentsResult, scheduleRulesResult] = await Promise.all([
+    const [groupResult, scheduleRulesResult] = await Promise.all([
       client
-        .from("lessons")
-        .select("id,course_id,group_id,teacher_id,starts_at,ends_at,topic")
+        .from("groups")
+        .select("id,course_id,teacher_id,name,status")
         .eq("organization_id", organizationId)
-        .eq("group_id", groupId)
-        .gte("starts_at", monthBoundaryIso(monthValue))
-        .lt("starts_at", monthBoundaryIso(nextMonth))
-        .order("starts_at", { ascending: true }),
-      client.from("group_students").select("id,group_id,student_id,status").eq("group_id", groupId),
+        .eq("id", groupId)
+        .eq("teacher_id", teacherId)
+        .maybeSingle(),
       client
         .from("schedule_rules")
         .select("id,target_type,target_id,weekday,start_time,end_time,starts_on,ends_on,status")
@@ -3237,14 +3274,43 @@ export async function getTeacherGroupJournal(organizationId: string, email: stri
         .order("weekday", { ascending: true })
         .order("start_time", { ascending: true }),
     ]);
+    const group = single<GroupRow>(groupResult, "Группа журнала");
+    const scheduleRules = rows<ScheduleRuleRow>(scheduleRulesResult, "Расписание журнала группы");
 
+    await ensureTeacherGroupLessonsForMonth(client, organizationId, group, monthValue, scheduleRules);
+
+    const [courseResult, lessonsResult, groupStudentsResult] = await Promise.all([
+      client
+        .from("courses")
+        .select("id,name,description,type,format,lesson_mark_scale,status")
+        .eq("organization_id", organizationId)
+        .eq("id", group.course_id)
+        .maybeSingle(),
+      client
+        .from("lessons")
+        .select("id,course_id,group_id,teacher_id,starts_at,ends_at,topic")
+        .eq("organization_id", organizationId)
+        .eq("group_id", groupId)
+        .gte("starts_at", monthBoundaryIso(monthValue))
+        .lt("starts_at", monthBoundaryIso(nextMonth))
+        .order("starts_at", { ascending: true }),
+      client.from("group_students").select("id,group_id,student_id,status").eq("group_id", groupId),
+    ]);
+
+    const course = single<CourseRow>(courseResult, "Курс журнала группы");
     const lessons = rows<LessonRow>(lessonsResult, "Уроки журнала группы");
     const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Состав журнала группы");
-    const scheduleRules = rows<ScheduleRuleRow>(scheduleRulesResult, "Расписание журнала группы");
     const lessonIds = lessons.map((lesson) => lesson.id);
     const activeGroupStudents = groupStudents.filter((item) => item.status === "active");
     const activeStudentIds = new Set(activeGroupStudents.map((item) => item.student_id));
-    const [journalResult, progressResult, homeworkResult, materialsResult] = await Promise.all([
+    const [studentsResult, journalResult, progressResult, homeworkResult] = await Promise.all([
+      activeStudentIds.size > 0
+        ? client
+            .from("students")
+            .select("id,user_id,name,phone,email,status")
+            .eq("organization_id", organizationId)
+            .in("id", [...activeStudentIds])
+        : Promise.resolve({ data: [], error: null }),
       lessonIds.length > 0
         ? client
             .from("journal_entries")
@@ -3262,15 +3328,9 @@ export async function getTeacherGroupJournal(organizationId: string, email: stri
             .eq("status", "active")
             .in("lesson_id", lessonIds)
         : Promise.resolve({ data: [], error: null }),
-      lessonIds.length > 0
-        ? client
-            .from("materials")
-            .select("id,course_id,group_id,student_id,lesson_id,homework_id,title,type,content,url,visibility,status")
-            .eq("organization_id", organizationId)
-            .eq("status", "active")
-        : Promise.resolve({ data: [], error: null }),
     ]);
 
+    const students = rows<StudentRow>(studentsResult, "Ученики журнала группы");
     const journalEntries = rows<JournalEntryRow>(journalResult, "Записи журнала группы").filter((entry) =>
       activeStudentIds.has(entry.student_id),
     );
@@ -3278,12 +3338,33 @@ export async function getTeacherGroupJournal(organizationId: string, email: stri
       (record) => record.lesson_id && activeStudentIds.has(record.student_id),
     );
     const homework = rows<HomeworkRow>(homeworkResult, "Домашние задания журнала группы");
-    const materials = rows<MaterialRow>(materialsResult, "Материалы журнала группы").filter(
-      (material) => material.group_id === group.id || material.course_id === group.course_id,
-    );
-    const courseMap = byId(courses);
+    const homeworkIds = new Set(homework.map((item) => item.id));
+    const [lessonMaterialsResult, homeworkMaterialsResult] = await Promise.all([
+      lessonIds.length > 0
+        ? client
+            .from("materials")
+            .select("id,course_id,group_id,student_id,lesson_id,homework_id,title,type,content,url,visibility,status")
+            .eq("organization_id", organizationId)
+            .eq("status", "active")
+            .in("lesson_id", lessonIds)
+        : Promise.resolve({ data: [], error: null }),
+      homeworkIds.size > 0
+        ? client
+            .from("materials")
+            .select("id,course_id,group_id,student_id,lesson_id,homework_id,title,type,content,url,visibility,status")
+            .eq("organization_id", organizationId)
+            .eq("status", "active")
+            .in("homework_id", [...homeworkIds])
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+    const materials = Array.from(
+      byId([
+        ...rows<MaterialRow>(lessonMaterialsResult, "Материалы уроков журнала"),
+        ...rows<MaterialRow>(homeworkMaterialsResult, "Материалы домашних заданий журнала"),
+      ]).values(),
+    ).filter((material) => material.group_id === group.id || material.course_id === group.course_id || material.homework_id);
+    const courseMap = new Map([[course.id, course]]);
     const studentMap = byId(students);
-    const userMap = byId(users);
     const journalEntryMap = new Map(journalEntries.map((entry) => [journalKey(entry.lesson_id, entry.student_id), entry]));
     const progressKeys = new Set(
       progressRecords
@@ -3360,8 +3441,8 @@ export async function getTeacherGroupJournal(organizationId: string, email: stri
     return {
       id: group.id,
       name: group.name,
-      course: courseMap.get(group.course_id)?.name ?? "Курс",
-      teacher: group.teacher_id ? userMap.get(group.teacher_id)?.name ?? teacher.name : teacher.name,
+      course: course.name,
+      teacher: teacherName,
       status: groupStatusLabel(group.status),
       monthLabel: formatMonthLabel(monthValue),
       monthValue,

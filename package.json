@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "perf:baseline": "node scripts/performance-baseline.mjs",
     "start": "next start",
     "smoke:auth": "node scripts/auth-smoke.mjs",
     "smoke:roles": "node scripts/cross-role-smoke.mjs",

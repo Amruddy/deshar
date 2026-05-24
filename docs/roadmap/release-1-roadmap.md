@@ -199,7 +199,11 @@
 
 Статус:
 
-следующий ожидаемый stage, active plan еще не выбран.
+активный stage.
+
+Активный план:
+
+`docs/work-plans/active/36-performance-baseline-supabase-plan.md`
 
 Цель:
 
