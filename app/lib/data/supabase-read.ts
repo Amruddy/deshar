@@ -2246,9 +2246,25 @@ export async function getAdminGroupDetail(organizationId: string, groupId: strin
 
 export async function getAdminStudents(organizationId: string) {
   return readSupabaseData<{ students: AdminStudentItem[] }>(async (client) => {
-    const { courses, groups, students, users } = await getBaseOrganizationData(client, organizationId);
+    const [coursesResult, groupsResult, studentsResult] = await Promise.all([
+      client.from("courses").select("id,name").eq("organization_id", organizationId),
+      client.from("groups").select("id,name").eq("organization_id", organizationId),
+      client.from("students").select("id,user_id,name,phone,email,status").eq("organization_id", organizationId),
+    ]);
+    const courses = rows<Pick<CourseRow, "id" | "name">>(coursesResult, "Курсы учеников");
+    const groups = rows<Pick<GroupRow, "id" | "name">>(groupsResult, "Группы учеников");
+    const students = rows<StudentRow>(studentsResult, "Ученики");
     const studentIds = students.map((student) => student.id);
-    const [groupStudentsResult, paymentsResult] = await Promise.all([
+    const userIds = Array.from(
+      new Set(students.map((student) => student.user_id).filter((userId): userId is string => Boolean(userId))),
+    );
+    const [usersResult, groupStudentsResult, paymentsResult] = await Promise.all([
+      userIds.length > 0
+        ? client
+            .from("users")
+            .select("id,name,email,phone,status,auth_user_id,auth_status,invited_at,last_sign_in_at")
+            .in("id", userIds)
+        : Promise.resolve({ data: [], error: null }),
       studentIds.length > 0
         ? client.from("group_students").select("id,group_id,student_id,status").in("student_id", studentIds)
         : Promise.resolve({ data: [], error: null }),
@@ -2256,9 +2272,11 @@ export async function getAdminStudents(organizationId: string) {
         ? client
             .from("payments")
             .select("id,student_id,course_id,group_id,amount,currency,period_start,period_end,due_at,status")
+            .eq("organization_id", organizationId)
             .in("student_id", studentIds)
         : Promise.resolve({ data: [], error: null }),
     ]);
+    const users = rows<UserRow>(usersResult, "Пользователи учеников");
     const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Группы учеников");
     const payments = rows<PaymentRow>(paymentsResult, "Оплата учеников");
     const courseMap = byId(courses);
@@ -2724,10 +2742,23 @@ export async function getStudentPayments(organizationId: string, email: string) 
 export async function getTeacherOverview(organizationId: string, email: string) {
   return readSupabaseData<TeacherOverviewData>(async (client) => {
     const teacher = await getUserByEmail(client, email);
-    const { courses, groups, students } = await getBaseOrganizationData(client, organizationId);
-    const teacherGroups = groups.filter((group) => group.teacher_id === teacher.id && group.status !== "archived");
+    const teacherGroupsResult = await client
+      .from("groups")
+      .select("id,course_id,teacher_id,name,status")
+      .eq("organization_id", organizationId)
+      .eq("teacher_id", teacher.id)
+      .neq("status", "archived");
+    const teacherGroups = rows<GroupRow>(teacherGroupsResult, "Группы преподавателя");
     const groupIds = teacherGroups.map((group) => group.id);
-    const [groupStudentsResult, lessonsResult, paymentsResult] = await Promise.all([
+    const courseIds = Array.from(new Set(teacherGroups.map((group) => group.course_id)));
+    const [coursesResult, groupStudentsResult, lessonsResult] = await Promise.all([
+      courseIds.length > 0
+        ? client
+            .from("courses")
+            .select("id,name,description,type,format,lesson_mark_scale,status")
+            .eq("organization_id", organizationId)
+            .in("id", courseIds)
+        : Promise.resolve({ data: [], error: null }),
       groupIds.length > 0
         ? client.from("group_students").select("id,group_id,student_id,status").in("group_id", groupIds)
         : Promise.resolve({ data: [], error: null }),
@@ -2741,15 +2772,27 @@ export async function getTeacherOverview(organizationId: string, email: string) 
             .order("starts_at", { ascending: true })
             .limit(5)
         : Promise.resolve({ data: [], error: null }),
-      client
-        .from("payments")
-        .select("id,student_id,course_id,group_id,amount,currency,period_start,period_end,due_at,status")
-        .eq("organization_id", organizationId),
     ]);
+    const courses = rows<CourseRow>(coursesResult, "Курсы преподавателя");
     const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Состав групп преподавателя");
     const lessons = rows<LessonRow>(lessonsResult, "Занятия преподавателя");
-    const payments = rows<PaymentRow>(paymentsResult, "Оплата учеников преподавателя");
     const studentIds = new Set(groupStudents.filter((item) => item.status === "active").map((item) => item.student_id));
+    const activeStudentIds = Array.from(studentIds);
+    const [studentsResult, paymentsResult] = await Promise.all([
+      activeStudentIds.length > 0
+        ? client.from("students").select("id,user_id,name,phone,email,status").eq("organization_id", organizationId).in("id", activeStudentIds)
+        : Promise.resolve({ data: [], error: null }),
+      activeStudentIds.length > 0
+        ? client
+            .from("payments")
+            .select("id,student_id,course_id,group_id,amount,currency,period_start,period_end,due_at,status")
+            .eq("organization_id", organizationId)
+            .in("student_id", activeStudentIds)
+            .in("status", ["pending", "overdue"])
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+    const students = rows<StudentRow>(studentsResult, "Ученики преподавателя");
+    const payments = rows<PaymentRow>(paymentsResult, "Оплата учеников преподавателя");
     const studentMap = byId(students.filter((student) => studentIds.has(student.id)));
     const courseMap = byId(courses);
     const groupMap = byId(teacherGroups);

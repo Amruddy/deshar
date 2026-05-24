@@ -229,11 +229,11 @@
 
 Статус:
 
-активный stage.
+завершен, PR #62.
 
 Активный план:
 
-`docs/work-plans/active/37-public-registration-solo-teacher-plan.md`
+`docs/work-plans/completed/37-public-registration-solo-teacher-plan.md`
 
 Цель:
 
@@ -257,8 +257,38 @@
 - billing/online payment;
 - production deploy, домен и SMTP-настройка вне описания ручных Supabase шагов.
 
+### Release Stage 10. Post-registration Performance
+
+Статус:
+
+активный stage.
+
+Активный план:
+
+`docs/work-plans/active/38-post-registration-performance-plan.md`
+
+Цель:
+
+ускорить переходы после регистрации и входа без изменения ролей, регистрации,
+invite-only правил и security boundaries.
+
+Входит:
+
+- baseline в production-сборке после публичной регистрации;
+- request-level memoization для session/profile resolver;
+- сокращение лишних Supabase round-trip в session resolver;
+- запрет лишней записи `users.last_sign_in_at` на каждом protected request;
+- повторный `perf:baseline`, `smoke:auth` и `smoke:roles`.
+
+Не входит:
+
+- изменение product-scope регистрации;
+- browser-side доступ к приватным Supabase tables;
+- новая визуальная переработка;
+- production deploy, домен, SMTP или смена Supabase region.
+
 ## 5. Следующий stage
 
 Следующий кодовый stage:
 
-`Release 1.0 Public Registration And Solo Teacher`
+`Release 1.0 Post-registration Performance`
