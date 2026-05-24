@@ -231,7 +231,7 @@
 
 завершен, PR #62.
 
-Активный план:
+План:
 
 `docs/work-plans/completed/37-public-registration-solo-teacher-plan.md`
 
@@ -261,11 +261,11 @@
 
 Статус:
 
-активный stage.
+завершен, PR #63.
 
-Активный план:
+План:
 
-`docs/work-plans/active/38-post-registration-performance-plan.md`
+`docs/work-plans/completed/38-post-registration-performance-plan.md`
 
 Цель:
 
@@ -291,4 +291,7 @@ invite-only правил и security boundaries.
 
 Следующий кодовый stage:
 
-`Release 1.0 Post-registration Performance`
+не выбран.
+
+Перед следующим кодовым stage нужно выбрать новую цель Release 1.0 и оформить
+активный work plan в `docs/work-plans/active/`.
