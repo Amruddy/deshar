@@ -4,7 +4,7 @@
 
 Текущий активный технический план:
 
-не выбран.
+`36-performance-baseline-supabase-plan.md`
 
 Последний завершенный stage:
 
@@ -14,7 +14,7 @@
 
 `Release 1.0 Performance Baseline And Supabase Optimization`
 
-Первый ожидаемый блок следующего stage:
+Первый блок активного stage:
 
 baseline быстродействия, Supabase-запросов и тяжелых маршрутов.
 
@@ -25,5 +25,5 @@ Codex перед разработкой должен читать:
 - `docs/roadmap/README.md`;
 - связанные спецификации из `docs/specs/`.
 
-Перед началом runtime-оптимизаций нужно создать отдельный active plan для
-performance stage и начинать работу от актуального `main`.
+Runtime-оптимизации выполняются только после измеренного baseline, описанного в
+активном плане и `docs/specs/03-technical-specs/performance-and-supabase.md`.

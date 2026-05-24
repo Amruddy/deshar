@@ -19,9 +19,10 @@
 
 - Текущий большой блок: `Release 1.0`.
 - Последний завершенный кодовый stage: `Release Candidate Smoke And Notes`, PR #59.
-- Активный stage: не выбран.
-- Активный план: не выбран.
-- Следующий ожидаемый stage: `Release 1.0 Performance Baseline And Supabase Optimization`.
+- Активный stage: `Release 1.0 Performance Baseline And Supabase Optimization`.
+- Активный план: `docs/work-plans/active/36-performance-baseline-supabase-plan.md`.
+- Первый блок active stage: baseline быстродействия, Supabase-запросов и
+  тяжелых маршрутов.
 - Предыдущий блок: `MPMF 1.0`, завершен и смержен в `main`.
 - Запись завершения MPMF 1.0: `docs/release/mpmf-1-release-readiness.md`.
 - Запись завершения Production Hardening: `docs/release/release-1-production-hardening.md`.
@@ -97,14 +98,13 @@ Roadmap:
 
 Активный stage:
 
-не выбран.
-
-Следующий ожидаемый stage:
-
 `Release 1.0 Performance Baseline And Supabase Optimization`
 
-Перед runtime-оптимизациями нужно создать отдельный active work plan от
-актуального `main`.
+Активный work plan:
+
+`docs/work-plans/active/36-performance-baseline-supabase-plan.md`
+
+Runtime-оптимизации выполняются только после измеренного baseline.
 
 ## 6. Следующие крупные stages Release 1.0
 
@@ -117,5 +117,5 @@ Roadmap:
 7. `Functional UX Fixes Before Hardening`.
 8. `Production Hardening` - завершен, PR #57.
 9. `Release Candidate Smoke And Notes` - завершен, PR #59.
-10. `Release 1.0 Performance Baseline And Supabase Optimization` - следующий
-    ожидаемый stage.
+10. `Release 1.0 Performance Baseline And Supabase Optimization` - активный
+    stage.

@@ -23,7 +23,7 @@ export default async function TeacherGroupJournalPage({ params, searchParams }: 
   const { groupId } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const month = firstSearchValue(resolvedSearchParams?.month);
-  const result = await getTeacherGroupJournal(session.organizationId, session.email, groupId, month);
+  const result = await getTeacherGroupJournal(session.organizationId, session.userId, session.name, groupId, month);
 
   return (
     <SupabaseDataPage

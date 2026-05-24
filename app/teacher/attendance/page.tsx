@@ -45,7 +45,7 @@ function attendanceHref(
 export default async function TeacherAttendancePage({ searchParams }: TeacherAttendancePageProps) {
   const session = await requireWorkspace("teacher");
   const params = searchParams ? await searchParams : {};
-  const result = await getTeacherAttendance(session.organizationId, session.email, {
+  const result = await getTeacherAttendance(session.organizationId, session.userId, {
     groupId: searchValue(params.groupId),
     lowOnly: searchBoolean(params.lowOnly),
     month: searchValue(params.month),

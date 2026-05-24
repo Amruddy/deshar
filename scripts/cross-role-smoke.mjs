@@ -128,6 +128,7 @@ if (failures.length > 0) {
 }
 
 console.log(`\nSmoke по ролям прошел. Проверено: ${checkedCount}. Пропущено динамических ссылок: ${skippedCount}.`);
+process.exit(0);
 
 async function checkPath(role, path, label = path, includes = null) {
   try {
@@ -187,7 +188,7 @@ async function expectRedirect(path, cookie, expectedPathPrefix, label) {
 }
 
 async function requestPath(path, cookie) {
-  const headers = cookie ? { Cookie: cookie } : {};
+  const headers = cookie ? { Connection: "close", Cookie: cookie } : { Connection: "close" };
   const response = await fetch(new URL(path, baseUrl), {
     headers,
     redirect: "manual",
