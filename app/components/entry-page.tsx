@@ -6,6 +6,7 @@ import {
   loginAsStudent,
   loginAsTeacher,
   loginWithPassword,
+  registerOwnerAccount,
   requestPasswordReset,
 } from "@/app/login/actions";
 
@@ -59,14 +60,21 @@ const errorMessages: Record<string, string> = {
   missing_reset_email: "Введите email для восстановления доступа.",
   profile_disabled: "Доступ для этого профиля отключен. Обратитесь к администратору.",
   profile_not_found: "Аккаунт найден, но профиль Deshar для этого email еще не подключен.",
+  registration_account_exists: "Аккаунт с таким email уже зарегистрирован. Войдите по паролю или восстановите доступ.",
+  registration_failed: "Не удалось создать аккаунт. Проверьте данные, настройки Supabase Auth и попробуйте еще раз.",
+  registration_kind_invalid: "Выберите тип регистрации: школа или преподаватель-одиночка.",
+  registration_missing_fields: "Заполните имя, email, пароль и название рабочей области.",
+  registration_password_short: "Пароль должен содержать не менее 8 символов.",
   reset_failed: "Не удалось отправить письмо восстановления. Проверьте email и настройки Supabase.",
   supabase_not_configured: "Supabase Auth еще не настроен для этого окружения.",
   workspace_not_available: "Для этого профиля нет доступной рабочей области.",
 };
 
 const messageTexts: Record<string, string> = {
+  email_confirmed: "Email подтвержден. Можно продолжить работу или войти по email и паролю.",
   password_reset_sent: "Письмо восстановления отправлено. Откройте ссылку из письма, чтобы задать новый пароль.",
   password_updated: "Пароль обновлен. Теперь можно войти по email и паролю.",
+  registration_email_sent: "Регистрация создана. Мы отправили письмо подтверждения на email.",
 };
 
 export async function EntryPage({ error, message }: EntryPageProps) {
@@ -203,6 +211,69 @@ export async function EntryPage({ error, message }: EntryPageProps) {
               </button>
             </form>
           </div>
+
+          <section className="panel registration-panel" id="entry-registration" aria-label="Регистрация в Deshar">
+            <div className="registration-heading">
+              <span className="status">Регистрация</span>
+              <h2>Создать рабочую область</h2>
+            </div>
+
+            <div className="registration-options">
+              <form action={registerOwnerAccount} className="form-grid auth-form registration-form">
+                <input name="registrationKind" type="hidden" value="school_admin" />
+                <div className="registration-form-intro">
+                  <h3>Новая школа</h3>
+                  <p>Создает школу и первого администратора-владельца.</p>
+                </div>
+                <label>
+                  Имя владельца
+                  <input name="ownerName" autoComplete="name" required />
+                </label>
+                <label>
+                  Email
+                  <input name="registrationEmail" type="email" autoComplete="email" required />
+                </label>
+                <label>
+                  Пароль
+                  <input name="registrationPassword" type="password" autoComplete="new-password" minLength={8} required />
+                </label>
+                <label>
+                  Название школы
+                  <input name="organizationName" autoComplete="organization" required />
+                </label>
+                <button className="button" type="submit">
+                  Создать школу
+                </button>
+              </form>
+
+              <form action={registerOwnerAccount} className="form-grid auth-form registration-form">
+                <input name="registrationKind" type="hidden" value="solo_teacher" />
+                <div className="registration-form-intro">
+                  <h3>Преподаватель-одиночка</h3>
+                  <p>Создает личный кабинет с доступом к журналу и ограниченному администрированию.</p>
+                </div>
+                <label>
+                  Имя преподавателя
+                  <input name="ownerName" autoComplete="name" required />
+                </label>
+                <label>
+                  Email
+                  <input name="registrationEmail" type="email" autoComplete="email" required />
+                </label>
+                <label>
+                  Пароль
+                  <input name="registrationPassword" type="password" autoComplete="new-password" minLength={8} required />
+                </label>
+                <label>
+                  Название кабинета
+                  <input name="organizationName" autoComplete="organization" required />
+                </label>
+                <button className="secondary-button" type="submit">
+                  Создать кабинет
+                </button>
+              </form>
+            </div>
+          </section>
         </section>
 
         {error && !errorMessage ? (

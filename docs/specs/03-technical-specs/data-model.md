@@ -90,7 +90,7 @@ Next.js app -> app/lib/supabase/* + app/lib/data/* -> Supabase
 
 - `id`;
 - `name`;
-- `type` - школа, учебный центр, частный преподаватель или другой тип;
+- `type` - `school`, `solo_teacher`, учебный центр или другой тип;
 - `status` - активна или архивирована;
 - `created_at`;
 - `updated_at`.
@@ -144,11 +144,14 @@ Next.js app -> app/lib/supabase/* + app/lib/data/* -> Supabase
 
 - `student`;
 - `teacher`;
+- `solo_teacher`;
 - `admin`;
 - `director`.
 
-Преподаватель-одиночка технически может быть пользователем с ролями `teacher`
-и `admin` внутри своей организации.
+Преподаватель-одиночка в Release 1.0 должен иметь бизнес-роль `solo_teacher`.
+Для маршрутов эта роль дает доступ к `/teacher` и ограниченному `/admin`; при
+необходимости в `roles` также могут храниться рабочие роли `teacher` и `admin`
+для совместимости с текущим workspace resolver.
 
 ### 3.3. Permission
 

@@ -4,19 +4,19 @@
 
 Текущий активный технический план:
 
-`36-performance-baseline-supabase-plan.md`
+`37-public-registration-solo-teacher-plan.md`
 
 Последний завершенный stage:
 
-`../completed/35-release-candidate-smoke-and-notes-plan.md`
+`../completed/36-performance-baseline-supabase-plan.md`
 
 Следующий ожидаемый stage:
 
-`Release 1.0 Performance Baseline And Supabase Optimization`
+`Release 1.0 Public Registration And Solo Teacher`
 
 Первый блок активного stage:
 
-baseline быстродействия, Supabase-запросов и тяжелых маршрутов.
+публичная регистрация новой школы, регистрация преподавателя-одиночки и email confirmation через Supabase Auth.
 
 Codex перед разработкой должен читать:
 
@@ -25,5 +25,6 @@ Codex перед разработкой должен читать:
 - `docs/roadmap/README.md`;
 - связанные спецификации из `docs/specs/`.
 
-Runtime-оптимизации выполняются только после измеренного baseline, описанного в
-активном плане и `docs/specs/03-technical-specs/performance-and-supabase.md`.
+Публичная регистрация выполняется только по активному plan и после обновления
+`docs/specs/03-technical-specs/production-auth.md`, потому что предыдущая версия
+спеков запрещала самостоятельную регистрацию.

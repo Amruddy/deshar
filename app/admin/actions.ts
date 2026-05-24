@@ -25,10 +25,20 @@ import {
   updateAdminGroup,
   updateAdminStudent,
 } from "@/app/lib/data/admin-write";
-import { requireWorkspace, requireWorkspacePermission, type Permission } from "@/app/lib/dev-auth";
+import { isSoloTeacherSession, requireWorkspace, requireWorkspacePermission, type AppSession, type Permission } from "@/app/lib/dev-auth";
 
 async function requireAdmin(permission?: Permission) {
   return permission ? requireWorkspacePermission("admin", permission) : requireWorkspace("admin");
+}
+
+async function requireSchoolAdmin(permission?: Permission): Promise<AppSession> {
+  const session = await requireAdmin(permission);
+
+  if (isSoloTeacherSession(session)) {
+    redirect("/forbidden?required=teachers");
+  }
+
+  return session;
 }
 
 function requiredString(formData: FormData, name: string, label: string) {
@@ -159,7 +169,7 @@ export async function archiveCourse(courseId: string) {
 }
 
 export async function createTeacher(formData: FormData) {
-  const session = await requireAdmin();
+  const session = await requireSchoolAdmin();
 
   await createAdminTeacher({
     organizationId: session.organizationId,
@@ -174,7 +184,7 @@ export async function createTeacher(formData: FormData) {
 }
 
 export async function inviteTeacherAccess(userId: string) {
-  const session = await requireAdmin();
+  const session = await requireSchoolAdmin();
 
   try {
     await inviteAdminTeacherAccess({
@@ -192,7 +202,7 @@ export async function inviteTeacherAccess(userId: string) {
 }
 
 export async function disableTeacherAccess(userId: string) {
-  const session = await requireAdmin();
+  const session = await requireSchoolAdmin();
 
   try {
     await disableAdminTeacherAccess({

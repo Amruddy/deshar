@@ -37,6 +37,7 @@
 - `33-functional-ux-fixes-before-hardening-plan.md` - функциональные UX-фиксы перед hardening: журнал и расписание, ближайшие занятия преподавателя, отмена домашних заданий, архивирование групп, посещаемость ученика и точечные исправления таблиц.
 - `34-production-hardening-plan.md` - production hardening Release 1.0: env/config, закрытые маршруты, server-only/service-role границы, smoke-скрипты и release limitations.
 - `35-release-candidate-smoke-and-notes-plan.md` - release candidate smoke and notes Release 1.0: финальный role/auth smoke, рабочий журнал и сводная посещаемость преподавателя, release limitations и release notes.
+- `36-performance-baseline-supabase-plan.md` - performance baseline and Supabase optimization Release 1.0: измеримый baseline, оптимизация teacher loaders, отчет по скорости и воспроизводимый `perf:baseline`.
 - `01-initial-product-implementation-plan.md` - исторический план первой рабочей реализации.
 - `02-system-a-ui-implementation-plan.md` - исторический план UI-направления System A.
 

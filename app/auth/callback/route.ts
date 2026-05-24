@@ -14,10 +14,11 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const next = safeNextPath(requestUrl.searchParams.get("next"));
+  const nextUrl = new URL(next, request.url);
   const redirectUrl = new URL(request.url);
 
-  redirectUrl.pathname = next;
-  redirectUrl.search = "";
+  redirectUrl.pathname = nextUrl.pathname;
+  redirectUrl.search = nextUrl.search;
 
   if (!code) {
     redirectUrl.pathname = "/login";

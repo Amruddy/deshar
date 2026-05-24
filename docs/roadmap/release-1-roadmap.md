@@ -199,11 +199,11 @@
 
 Статус:
 
-активный stage.
+завершен, PR #61.
 
-Активный план:
+План:
 
-`docs/work-plans/active/36-performance-baseline-supabase-plan.md`
+`docs/work-plans/completed/36-performance-baseline-supabase-plan.md`
 
 Цель:
 
@@ -225,8 +225,40 @@
 - browser-side прямое чтение Supabase без отдельного RLS/security stage;
 - массовая переработка схемы данных без отдельного плана.
 
+### Release Stage 9. Public Registration And Solo Teacher
+
+Статус:
+
+активный stage.
+
+Активный план:
+
+`docs/work-plans/active/37-public-registration-solo-teacher-plan.md`
+
+Цель:
+
+добавить production-регистрацию с главной страницы для двух владельческих сценариев:
+новая школа с администратором-владельцем и преподаватель-одиночка со своей организацией.
+
+Входит:
+
+- форма входа, восстановления и регистрации на `/` / `/login`;
+- регистрация новой школы;
+- регистрация преподавателя-одиночки как роли `solo_teacher`;
+- email confirmation через Supabase Auth;
+- сохранение invite-only flow для учеников и обычных преподавателей школы;
+- dev-auth только для локального smoke/dev режима.
+
+Не входит:
+
+- публичная регистрация учеников;
+- публичная регистрация обычного преподавателя в существующую школу без приглашения;
+- OAuth/social login, SSO, MFA/passkeys;
+- billing/online payment;
+- production deploy, домен и SMTP-настройка вне описания ручных Supabase шагов.
+
 ## 5. Следующий stage
 
 Следующий кодовый stage:
 
-`Release 1.0 Performance Baseline And Supabase Optimization`
+`Release 1.0 Public Registration And Solo Teacher`
