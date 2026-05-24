@@ -4,19 +4,19 @@
 
 Текущий активный технический план:
 
-`38-post-registration-performance-plan.md`
+активный технический план не выбран.
 
 Последний завершенный stage:
 
-`../completed/37-public-registration-solo-teacher-plan.md`
+`../completed/38-post-registration-performance-plan.md`
 
 Следующий ожидаемый stage:
 
-`Release 1.0 Post-registration Performance`
+требует выбора и оформления отдельным work plan.
 
 Первый блок активного stage:
 
-ускорение protected routes после регистрации и входа: session resolver, лишние Supabase round-trip и повторные auth/profile checks.
+не выбран.
 
 Codex перед разработкой должен читать:
 
@@ -25,5 +25,5 @@ Codex перед разработкой должен читать:
 - `docs/roadmap/README.md`;
 - связанные спецификации из `docs/specs/`.
 
-Post-registration performance выполняется только по активному plan и после baseline
-в production-сборке, потому что performance spec запрещает оптимизации без измерения.
+Перед новым кодовым stage нужно выбрать следующий stage в roadmap и создать или
+обновить активный work plan.
