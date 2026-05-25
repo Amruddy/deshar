@@ -4,7 +4,7 @@ import { requireWorkspace } from "@/app/lib/dev-auth";
 
 export default async function StudentAttendancePage() {
   const session = await requireWorkspace("student");
-  const result = await getStudentAttendance(session.organizationId, session.email);
+  const result = await getStudentAttendance(session.organizationId, session.userId);
 
   return (
     <SupabaseDataPage

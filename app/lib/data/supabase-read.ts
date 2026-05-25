@@ -105,6 +105,7 @@ type LessonRow = {
   course_id: string;
   group_id: string | null;
   teacher_id: string;
+  schedule_rule_id?: string | null;
   starts_at: string;
   ends_at: string;
   summary?: string | null;
@@ -159,6 +160,16 @@ type JournalEntryRow = {
   teacher_comment: string | null;
   internal_comment: string | null;
   is_visible_to_student: boolean;
+};
+
+type JournalMarkRow = Pick<JournalEntryRow, "attendance_mark" | "id" | "lesson_id" | "lesson_mark" | "student_id">;
+type StudentAttendanceJournalRow = Pick<
+  JournalEntryRow,
+  "attendance_mark" | "id" | "is_visible_to_student" | "lesson_id" | "student_id" | "teacher_comment"
+>;
+
+type StudentAttendanceLessonRow = LessonRow & {
+  journal_entries: StudentAttendanceJournalRow[] | StudentAttendanceJournalRow | null;
 };
 
 type ProgressRecordLessonRow = {
@@ -1258,7 +1269,7 @@ function normalizeAttendanceMark(value: string | null): TeacherJournalCell["atte
   return "";
 }
 
-function manualJournalMarkValue(entry: JournalEntryRow | undefined) {
+function manualJournalMarkValue(entry: Pick<JournalEntryRow, "attendance_mark" | "lesson_mark"> | undefined) {
   const attendanceMark = normalizeAttendanceMark(entry?.attendance_mark ?? null);
 
   if (attendanceMark === "present") {
@@ -1298,7 +1309,7 @@ function attendanceTone(
 
 function studentAttendanceStatus(
   lesson: LessonRow,
-  entry: JournalEntryRow | undefined,
+  entry: Pick<JournalEntryRow, "attendance_mark"> | undefined,
 ): { label: string; status: StudentAttendanceStatus } {
   const mark = normalizeAttendanceMark(entry?.attendance_mark ?? null);
   const isFuture = new Date(lesson.starts_at).getTime() > Date.now();
@@ -1324,6 +1335,7 @@ async function ensureTeacherGroupLessonsForMonth(
   group: GroupRow,
   monthValue: string,
   preloadedRules?: ScheduleRuleRow[],
+  preloadedLessons?: Pick<LessonRow, "schedule_rule_id" | "starts_at">[],
 ) {
   if (!group.teacher_id) {
     return 0;
@@ -1348,16 +1360,21 @@ async function ensureTeacherGroupLessonsForMonth(
     return 0;
   }
 
-  const existingResult = await client
-    .from("lessons")
-    .select("schedule_rule_id,starts_at")
-    .eq("organization_id", organizationId)
-    .eq("group_id", group.id)
-    .gte("starts_at", monthBoundaryIso(monthValue))
-    .lt("starts_at", monthBoundaryIso(addMonthValue(monthValue, 1)));
+  const existingLessons =
+    preloadedLessons ??
+    rows<{ schedule_rule_id: string | null; starts_at: string }>(
+      await client
+        .from("lessons")
+        .select("schedule_rule_id,starts_at")
+        .eq("organization_id", organizationId)
+        .eq("group_id", group.id)
+        .gte("starts_at", monthBoundaryIso(monthValue))
+        .lt("starts_at", monthBoundaryIso(addMonthValue(monthValue, 1))),
+      "Проверка уроков журнала",
+    );
   const existingSlots = new Set(
-    rows<{ schedule_rule_id: string | null; starts_at: string }>(existingResult, "Проверка уроков журнала")
-      .filter((lesson) => lesson.schedule_rule_id)
+    existingLessons
+      .filter((lesson): lesson is { schedule_rule_id: string; starts_at: string } => Boolean(lesson.schedule_rule_id))
       .map((lesson) => `${lesson.schedule_rule_id}:${new Date(lesson.starts_at).toISOString()}`),
   );
   const lessonsToCreate = rules.flatMap((rule) => {
@@ -1835,7 +1852,7 @@ const attendanceLowThreshold = 80;
 function buildLowAttendanceSignals(
   memberships: GroupStudentRow[],
   lessons: LessonRow[],
-  journalEntries: JournalEntryRow[],
+  journalEntries: JournalMarkRow[],
   students: Map<string, StudentRow>,
   groups: Map<string, GroupRow>,
 ) {
@@ -1987,6 +2004,62 @@ async function getBaseOrganizationData(client: SupabaseClient, organizationId: s
     students,
     users,
     members,
+  };
+}
+
+async function getStudentLearningContext(
+  client: SupabaseClient,
+  organizationId: string,
+  userId: string,
+  context: string,
+  options: { includeUsers?: boolean } = {},
+) {
+  const studentResult = await client
+    .from("students")
+    .select("id,user_id,name,phone,email,status")
+    .eq("organization_id", organizationId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  const student = single<StudentRow>(studentResult, `Карточка ученика: ${context}`);
+  const groupStudents = rows<GroupStudentRow>(
+    await client.from("group_students").select("id,group_id,student_id,status").eq("student_id", student.id),
+    `Группы ученика: ${context}`,
+  );
+  const activeGroupIds = Array.from(new Set(groupStudents.filter((item) => item.status === "active").map((item) => item.group_id)));
+  const groups =
+    activeGroupIds.length > 0
+      ? rows<GroupRow>(
+          await client
+            .from("groups")
+            .select("id,course_id,teacher_id,name,status")
+            .eq("organization_id", organizationId)
+            .in("id", activeGroupIds)
+            .neq("status", "archived"),
+          `Группы ученика: ${context}`,
+        )
+      : [];
+  const courseIds = Array.from(new Set(groups.map((group) => group.course_id)));
+  const teacherIds = Array.from(new Set(groups.map((group) => group.teacher_id).filter((teacherId): teacherId is string => Boolean(teacherId))));
+  const includeUsers = options.includeUsers ?? true;
+  const [coursesResult, usersResult] = await Promise.all([
+    courseIds.length > 0
+      ? client
+          .from("courses")
+          .select("id,name,description,type,format,lesson_mark_scale,status")
+          .eq("organization_id", organizationId)
+          .in("id", courseIds)
+      : Promise.resolve({ data: [], error: null }),
+    includeUsers && teacherIds.length > 0
+      ? client.from("users").select("id,name,email,phone,status,auth_user_id,auth_status,invited_at,last_sign_in_at").in("id", teacherIds)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  return {
+    courses: rows<CourseRow>(coursesResult, `Курсы ученика: ${context}`),
+    groupStudents,
+    student,
+    users: rows<UserRow>(usersResult, `Преподаватели ученика: ${context}`),
+    visibleGroups: groups,
   };
 }
 
@@ -2847,14 +2920,13 @@ export async function getStudentPayments(organizationId: string, email: string) 
   });
 }
 
-export async function getTeacherOverview(organizationId: string, email: string) {
+export async function getTeacherOverview(organizationId: string, teacherId: string, teacherName: string) {
   return readSupabaseData<TeacherOverviewData>(async (client) => {
-    const teacher = await getUserByEmail(client, email);
     const teacherGroupsResult = await client
       .from("groups")
       .select("id,course_id,teacher_id,name,status")
       .eq("organization_id", organizationId)
-      .eq("teacher_id", teacher.id)
+      .eq("teacher_id", teacherId)
       .neq("status", "archived");
     const teacherGroups = rows<GroupRow>(teacherGroupsResult, "Группы преподавателя");
     const groupIds = teacherGroups.map((group) => group.id);
@@ -2918,13 +2990,13 @@ export async function getTeacherOverview(organizationId: string, email: string) 
       attendanceLessonIds.length > 0
         ? client
             .from("journal_entries")
-            .select("id,lesson_id,student_id,attendance_mark,lesson_mark,teacher_comment,internal_comment,is_visible_to_student")
+            .select("id,lesson_id,student_id,attendance_mark,lesson_mark")
             .in("lesson_id", attendanceLessonIds)
         : Promise.resolve({ data: [], error: null }),
     ]);
     const students = rows<StudentRow>(studentsResult, "Ученики преподавателя");
     const payments = rows<PaymentRow>(paymentsResult, "Оплата учеников преподавателя");
-    const journalEntries = rows<JournalEntryRow>(journalResult, "Записи посещаемости преподавателя").filter((entry) =>
+    const journalEntries = rows<JournalMarkRow>(journalResult, "Записи посещаемости преподавателя").filter((entry) =>
       studentIds.has(entry.student_id),
     );
     const studentMap = byId(students.filter((student) => studentIds.has(student.id)));
@@ -2946,7 +3018,7 @@ export async function getTeacherOverview(organizationId: string, email: string) 
     ];
 
     return {
-      teacherName: teacher.name,
+      teacherName,
       metrics: [
         { label: "Мои группы", value: String(teacherGroups.length) },
         { label: "Ученики", value: String(studentIds.size) },
@@ -2978,15 +3050,14 @@ export async function getTeacherGroups(organizationId: string, teacherId: string
     const teacherGroups = rows<GroupRow>(teacherGroupsResult, "Группы преподавателя");
     const groupIds = teacherGroups.map((group) => group.id);
     const courseIds = Array.from(new Set(teacherGroups.map((group) => group.course_id)));
-    const coursesResult =
+    const [coursesResult, groupStudentsResult, lessonsResult, scheduleRulesResult, paymentsResult] = await Promise.all([
       courseIds.length > 0
-        ? await client
+        ? client
             .from("courses")
             .select("id,name,description,type,format,lesson_mark_scale,status")
             .eq("organization_id", organizationId)
             .in("id", courseIds)
-        : { data: [], error: null };
-    const [groupStudentsResult, lessonsResult, scheduleRulesResult, paymentsResult] = await Promise.all([
+        : Promise.resolve({ data: [], error: null }),
       groupIds.length > 0
         ? client.from("group_students").select("id,group_id,student_id,status").in("group_id", groupIds)
         : Promise.resolve({ data: [], error: null }),
@@ -3069,28 +3140,20 @@ export async function getTeacherAttendance(
       .neq("status", "archived");
     const teacherGroups = rows<GroupRow>(teacherGroupsResult, "Группы посещаемости преподавателя");
     const courseIds = Array.from(new Set(teacherGroups.map((group) => group.course_id)));
-    const coursesResult =
-      courseIds.length > 0
-        ? await client
-            .from("courses")
-            .select("id,name,description,type,format,lesson_mark_scale,status")
-            .eq("organization_id", organizationId)
-            .in("id", courseIds)
-        : { data: [], error: null };
-    const courses = rows<CourseRow>(coursesResult, "Курсы посещаемости преподавателя");
-    const groupOptions = teacherGroups
-      .map((group) => ({
-        label: `${group.name} - ${courses.find((course) => course.id === group.course_id)?.name ?? "курс"}`,
-        value: group.id,
-      }))
-      .sort((left, right) => left.label.localeCompare(right.label, "ru"));
-    const selectedGroupId = groupOptions.some((option) => option.value === filters.groupId) ? filters.groupId ?? "" : "";
+    const selectedGroupId = teacherGroups.some((group) => group.id === filters.groupId) ? filters.groupId ?? "" : "";
     const visibleGroups = selectedGroupId ? teacherGroups.filter((group) => group.id === selectedGroupId) : teacherGroups;
     const groupIds = visibleGroups.map((group) => group.id);
     const monthValue = normalizeMonthValue(filters.month);
     const nextMonth = addMonthValue(monthValue, 1);
     const now = new Date();
-    const [groupStudentsResult, lessonsResult] = await Promise.all([
+    const [coursesResult, groupStudentsResult, lessonsResult] = await Promise.all([
+      courseIds.length > 0
+        ? client
+            .from("courses")
+            .select("id,name,description,type,format,lesson_mark_scale,status")
+            .eq("organization_id", organizationId)
+            .in("id", courseIds)
+        : Promise.resolve({ data: [], error: null }),
       groupIds.length > 0
         ? client.from("group_students").select("id,group_id,student_id,status").in("group_id", groupIds)
         : Promise.resolve({ data: [], error: null }),
@@ -3105,6 +3168,13 @@ export async function getTeacherAttendance(
             .order("starts_at", { ascending: true })
         : Promise.resolve({ data: [], error: null }),
     ]);
+    const courses = rows<CourseRow>(coursesResult, "Курсы посещаемости преподавателя");
+    const groupOptions = teacherGroups
+      .map((group) => ({
+        label: `${group.name} - ${courses.find((course) => course.id === group.course_id)?.name ?? "курс"}`,
+        value: group.id,
+      }))
+      .sort((left, right) => left.label.localeCompare(right.label, "ru"));
     const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Ученики посещаемости преподавателя").filter(
       (item) => item.status === "active",
     );
@@ -3124,12 +3194,12 @@ export async function getTeacherAttendance(
       lessonIds.length > 0
         ? client
             .from("journal_entries")
-            .select("id,lesson_id,student_id,attendance_mark,lesson_mark,teacher_comment,internal_comment,is_visible_to_student")
+            .select("id,lesson_id,student_id,attendance_mark,lesson_mark")
             .in("lesson_id", lessonIds)
         : Promise.resolve({ data: [], error: null }),
     ]);
     const students = rows<StudentRow>(studentsResult, "Ученики посещаемости преподавателя");
-    const journalEntries = rows<JournalEntryRow>(journalResult, "Записи посещаемости преподавателя").filter((entry) =>
+    const journalEntries = rows<JournalMarkRow>(journalResult, "Записи посещаемости преподавателя").filter((entry) =>
       activeStudentIds.has(entry.student_id),
     );
     const courseMap = byId(courses);
@@ -3264,31 +3334,28 @@ export async function getTeacherAttendance(
   });
 }
 
-export async function getTeacherGroupDetail(organizationId: string, email: string, groupId: string) {
+export async function getTeacherGroupDetail(organizationId: string, teacherId: string, teacherName: string, groupId: string) {
   return readSupabaseData<TeacherGroupDetailData>(async (client) => {
-    const teacher = await getUserByEmail(client, email);
-    const { courses, groups, students, users } = await getBaseOrganizationData(client, organizationId);
-    const group = groups.find((item) => item.id === groupId && item.teacher_id === teacher.id);
-
-    if (!group) {
-      throw new Error("Группа: запись не найдена.");
-    }
-
     const nowDate = new Date();
     const now = nowDate.toISOString();
     const currentMonth = normalizeMonthValue(undefined);
     const nextMonth = addMonthValue(currentMonth, 1);
     const [
+      groupResult,
       groupStudentsResult,
       scheduleRulesResult,
       upcomingLessonsResult,
       recentLessonsResult,
       attendanceLessonsResult,
-      homeworkResult,
-      materialsResult,
-      paymentsResult,
     ] =
       await Promise.all([
+        client
+          .from("groups")
+          .select("id,course_id,teacher_id,name,status")
+          .eq("organization_id", organizationId)
+          .eq("id", groupId)
+          .eq("teacher_id", teacherId)
+          .maybeSingle(),
         client.from("group_students").select("id,group_id,student_id,status").eq("group_id", groupId),
         client
           .from("schedule_rules")
@@ -3323,25 +3390,9 @@ export async function getTeacherGroupDetail(organizationId: string, email: strin
           .gte("starts_at", monthBoundaryIso(currentMonth))
           .lt("starts_at", monthBoundaryIso(nextMonth))
           .order("starts_at", { ascending: true }),
-        client
-          .from("homework")
-          .select("id,course_id,group_id,student_id,title,description,due_at,status")
-          .eq("organization_id", organizationId)
-          .eq("status", "active")
-          .order("due_at", { ascending: true, nullsFirst: false })
-          .limit(20),
-        client
-          .from("materials")
-          .select("id,course_id,group_id,student_id,title,type,content,url,visibility,status")
-          .eq("organization_id", organizationId)
-          .eq("status", "active")
-          .limit(20),
-        client
-          .from("payments")
-          .select("id,student_id,course_id,group_id,amount,currency,period_start,period_end,due_at,status")
-          .eq("organization_id", organizationId),
       ]);
 
+    const group = single<GroupRow>(groupResult, "Группа преподавателя");
     const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Состав группы преподавателя");
     const scheduleRules = rows<ScheduleRuleRow>(scheduleRulesResult, "Расписание группы преподавателя");
     const upcomingLessons = rows<LessonRow>(upcomingLessonsResult, "Ближайшие занятия группы преподавателя");
@@ -3349,24 +3400,86 @@ export async function getTeacherGroupDetail(organizationId: string, email: strin
     const attendanceLessons = rows<LessonRow>(attendanceLessonsResult, "Занятия посещаемости группы преподавателя").filter(
       (lesson) => new Date(lesson.starts_at).getTime() <= nowDate.getTime(),
     );
-    const homework = rows<HomeworkRow>(homeworkResult, "Домашние задания группы преподавателя");
-    const materials = rows<MaterialRow>(materialsResult, "Материалы группы преподавателя");
-    const payments = rows<PaymentRow>(paymentsResult, "Оплата группы преподавателя");
-    const courseMap = byId(courses);
-    const groupMap = new Map([[group.id, group]]);
-    const studentMap = byId(students);
-    const userMap = byId(users);
     const activeGroupStudents = groupStudents.filter((item) => item.status === "active");
     const activeStudentIds = new Set(activeGroupStudents.map((item) => item.student_id));
+    const [
+      courseResult,
+      studentsResult,
+      homeworkResult,
+      groupMaterialsResult,
+      courseMaterialsResult,
+      paymentsResult,
+    ] = await Promise.all([
+      client
+        .from("courses")
+        .select("id,name,description,type,format,lesson_mark_scale,status")
+        .eq("organization_id", organizationId)
+        .eq("id", group.course_id)
+        .maybeSingle(),
+      activeStudentIds.size > 0
+        ? client
+            .from("students")
+            .select("id,user_id,name,phone,email,status")
+            .eq("organization_id", organizationId)
+            .in("id", [...activeStudentIds])
+        : Promise.resolve({ data: [], error: null }),
+      client
+        .from("homework")
+        .select("id,course_id,group_id,student_id,title,description,due_at,status")
+        .eq("organization_id", organizationId)
+        .eq("group_id", groupId)
+        .eq("status", "active")
+        .order("due_at", { ascending: true, nullsFirst: false })
+        .limit(5),
+      client
+        .from("materials")
+        .select("id,course_id,group_id,student_id,title,type,content,url,visibility,status")
+        .eq("organization_id", organizationId)
+        .eq("group_id", groupId)
+        .eq("status", "active")
+        .limit(10),
+      client
+        .from("materials")
+        .select("id,course_id,group_id,student_id,title,type,content,url,visibility,status")
+        .eq("organization_id", organizationId)
+        .eq("course_id", group.course_id)
+        .is("student_id", null)
+        .eq("status", "active")
+        .limit(10),
+      activeStudentIds.size > 0
+        ? client
+            .from("payments")
+            .select("id,student_id,course_id,group_id,amount,currency,period_start,period_end,due_at,status")
+            .eq("organization_id", organizationId)
+            .in("student_id", [...activeStudentIds])
+            .or(`group_id.eq.${group.id},course_id.eq.${group.course_id}`)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+
+    const course = single<CourseRow>(courseResult, "Курс группы преподавателя");
+    const students = rows<StudentRow>(studentsResult, "Ученики группы преподавателя");
+    const homework = rows<HomeworkRow>(homeworkResult, "Домашние задания группы преподавателя");
+    const materials = Array.from(
+      new Map(
+        [
+          ...rows<MaterialRow>(groupMaterialsResult, "Материалы группы преподавателя"),
+          ...rows<MaterialRow>(courseMaterialsResult, "Материалы курса группы преподавателя"),
+        ].map((item) => [item.id, item]),
+      ).values(),
+    );
+    const payments = rows<PaymentRow>(paymentsResult, "Оплата группы преподавателя");
+    const courseMap = new Map([[course.id, course]]);
+    const groupMap = new Map([[group.id, group]]);
+    const studentMap = byId(students);
     const attendanceLessonIds = attendanceLessons.map((lesson) => lesson.id);
     const journalResult =
       attendanceLessonIds.length > 0
         ? await client
             .from("journal_entries")
-            .select("id,lesson_id,student_id,attendance_mark,lesson_mark,teacher_comment,internal_comment,is_visible_to_student")
+            .select("id,lesson_id,student_id,attendance_mark,lesson_mark")
             .in("lesson_id", attendanceLessonIds)
         : { data: [], error: null };
-    const journalEntries = rows<JournalEntryRow>(journalResult, "Записи посещаемости группы преподавателя").filter((entry) =>
+    const journalEntries = rows<JournalMarkRow>(journalResult, "Записи посещаемости группы преподавателя").filter((entry) =>
       activeStudentIds.has(entry.student_id),
     );
     const groupPayments = payments.filter(
@@ -3437,8 +3550,8 @@ export async function getTeacherGroupDetail(organizationId: string, email: strin
     return {
       id: group.id,
       name: group.name,
-      course: courseMap.get(group.course_id)?.name ?? "Курс",
-      teacher: group.teacher_id ? userMap.get(group.teacher_id)?.name ?? teacher.name : teacher.name,
+      course: course.name,
+      teacher: teacherName,
       status: groupStatusLabel(group.status),
       metrics: [
         { label: "Ученики", value: String(activeGroupStudents.length) },
@@ -3503,8 +3616,6 @@ export async function getTeacherGroupJournal(
     const group = single<GroupRow>(groupResult, "Группа журнала");
     const scheduleRules = rows<ScheduleRuleRow>(scheduleRulesResult, "Расписание журнала группы");
 
-    await ensureTeacherGroupLessonsForMonth(client, organizationId, group, monthValue, scheduleRules);
-
     const [courseResult, lessonsResult, groupStudentsResult] = await Promise.all([
       client
         .from("courses")
@@ -3514,7 +3625,7 @@ export async function getTeacherGroupJournal(
         .maybeSingle(),
       client
         .from("lessons")
-        .select("id,course_id,group_id,teacher_id,starts_at,ends_at,topic")
+        .select("id,course_id,group_id,teacher_id,schedule_rule_id,starts_at,ends_at,topic")
         .eq("organization_id", organizationId)
         .eq("group_id", groupId)
         .gte("starts_at", monthBoundaryIso(monthValue))
@@ -3524,12 +3635,27 @@ export async function getTeacherGroupJournal(
     ]);
 
     const course = single<CourseRow>(courseResult, "Курс журнала группы");
-    const lessons = rows<LessonRow>(lessonsResult, "Уроки журнала группы");
+    let lessons = rows<LessonRow>(lessonsResult, "Уроки журнала группы");
     const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Состав журнала группы");
+    const createdLessonCount = await ensureTeacherGroupLessonsForMonth(client, organizationId, group, monthValue, scheduleRules, lessons);
+
+    if (createdLessonCount > 0) {
+      lessons = rows<LessonRow>(
+        await client
+          .from("lessons")
+          .select("id,course_id,group_id,teacher_id,schedule_rule_id,starts_at,ends_at,topic")
+          .eq("organization_id", organizationId)
+          .eq("group_id", groupId)
+          .gte("starts_at", monthBoundaryIso(monthValue))
+          .lt("starts_at", monthBoundaryIso(nextMonth))
+          .order("starts_at", { ascending: true }),
+        "Уроки журнала группы",
+      );
+    }
     const lessonIds = lessons.map((lesson) => lesson.id);
     const activeGroupStudents = groupStudents.filter((item) => item.status === "active");
     const activeStudentIds = new Set(activeGroupStudents.map((item) => item.student_id));
-    const [studentsResult, journalResult, progressResult, homeworkResult] = await Promise.all([
+    const [studentsResult, journalResult] = await Promise.all([
       activeStudentIds.size > 0
         ? client
             .from("students")
@@ -3540,82 +3666,18 @@ export async function getTeacherGroupJournal(
       lessonIds.length > 0
         ? client
             .from("journal_entries")
-            .select("id,lesson_id,student_id,attendance_mark,lesson_mark,teacher_comment,internal_comment,is_visible_to_student")
-            .in("lesson_id", lessonIds)
-        : Promise.resolve({ data: [], error: null }),
-      lessonIds.length > 0
-        ? client.from("progress_records").select("id,lesson_id,student_id").eq("organization_id", organizationId).in("lesson_id", lessonIds)
-        : Promise.resolve({ data: [], error: null }),
-      lessonIds.length > 0
-        ? client
-            .from("homework")
-            .select("id,course_id,group_id,student_id,lesson_id,title,description,due_at,status")
-            .eq("organization_id", organizationId)
-            .eq("status", "active")
+            .select("id,lesson_id,student_id,attendance_mark,lesson_mark")
             .in("lesson_id", lessonIds)
         : Promise.resolve({ data: [], error: null }),
     ]);
 
     const students = rows<StudentRow>(studentsResult, "Ученики журнала группы");
-    const journalEntries = rows<JournalEntryRow>(journalResult, "Записи журнала группы").filter((entry) =>
+    const journalEntries = rows<JournalMarkRow>(journalResult, "Записи журнала группы").filter((entry) =>
       activeStudentIds.has(entry.student_id),
     );
-    const progressRecords = rows<ProgressRecordLessonRow>(progressResult, "Прогресс журнала группы").filter(
-      (record) => record.lesson_id && activeStudentIds.has(record.student_id),
-    );
-    const homework = rows<HomeworkRow>(homeworkResult, "Домашние задания журнала группы");
-    const homeworkIds = new Set(homework.map((item) => item.id));
-    const [lessonMaterialsResult, homeworkMaterialsResult] = await Promise.all([
-      lessonIds.length > 0
-        ? client
-            .from("materials")
-            .select("id,course_id,group_id,student_id,lesson_id,homework_id,title,type,content,url,visibility,status")
-            .eq("organization_id", organizationId)
-            .eq("status", "active")
-            .in("lesson_id", lessonIds)
-        : Promise.resolve({ data: [], error: null }),
-      homeworkIds.size > 0
-        ? client
-            .from("materials")
-            .select("id,course_id,group_id,student_id,lesson_id,homework_id,title,type,content,url,visibility,status")
-            .eq("organization_id", organizationId)
-            .eq("status", "active")
-            .in("homework_id", [...homeworkIds])
-        : Promise.resolve({ data: [], error: null }),
-    ]);
-    const materials = Array.from(
-      byId([
-        ...rows<MaterialRow>(lessonMaterialsResult, "Материалы уроков журнала"),
-        ...rows<MaterialRow>(homeworkMaterialsResult, "Материалы домашних заданий журнала"),
-      ]).values(),
-    ).filter((material) => material.group_id === group.id || material.course_id === group.course_id || material.homework_id);
     const courseMap = new Map([[course.id, course]]);
     const studentMap = byId(students);
     const journalEntryMap = new Map(journalEntries.map((entry) => [journalKey(entry.lesson_id, entry.student_id), entry]));
-    const progressKeys = new Set(
-      progressRecords
-        .filter((record): record is ProgressRecordLessonRow & { lesson_id: string } => record.lesson_id !== null)
-        .map((record) => journalKey(record.lesson_id, record.student_id)),
-    );
-    const homeworkByLessonId = new Map<string, HomeworkRow[]>();
-    const homeworkIdToLessonId = new Map<string, string>();
-
-    for (const item of homework) {
-      if (!item.lesson_id) {
-        continue;
-      }
-
-      const items = homeworkByLessonId.get(item.lesson_id) ?? [];
-      items.push(item);
-      homeworkByLessonId.set(item.lesson_id, items);
-      homeworkIdToLessonId.set(item.id, item.lesson_id);
-    }
-
-    const materialLessonIds = new Set(
-      materials
-        .map((material) => material.lesson_id ?? (material.homework_id ? homeworkIdToLessonId.get(material.homework_id) : null))
-        .filter((lessonId): lessonId is string => Boolean(lessonId)),
-    );
     const now = Date.now();
     const journalLessons = lessons.map((lesson) => ({
       id: lesson.id,
@@ -3641,11 +3703,6 @@ export async function getTeacherGroupJournal(
             const isFuture = new Date(lesson.starts_at).getTime() > now;
             const indicators = [
               entry?.lesson_mark ? `Оценка ${entry.lesson_mark}` : null,
-              entry?.teacher_comment ? "Комментарий" : null,
-              entry?.internal_comment ? "Внутренний комментарий" : null,
-              progressKeys.has(key) ? "Прогресс" : null,
-              homeworkByLessonId.has(lesson.id) ? "ДЗ" : null,
-              materialLessonIds.has(lesson.id) ? "Материал" : null,
               !isFuture && entry && !attendanceMark ? "Пусто = П" : null,
             ].filter((indicator): indicator is string => indicator !== null);
 
@@ -4523,23 +4580,9 @@ export async function getStudentMaterials(organizationId: string, email: string)
   });
 }
 
-export async function getStudentOverview(organizationId: string, email: string) {
+export async function getStudentOverview(organizationId: string, userId: string) {
   return readSupabaseData<StudentOverviewData>(async (client) => {
-    const user = await getUserByEmail(client, email);
-    const studentResult = await client
-      .from("students")
-      .select("id,user_id,name,phone,email,status")
-      .eq("organization_id", organizationId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-    const student = single<StudentRow>(studentResult, "Карточка ученика");
-    const { courses, groups, users } = await getBaseOrganizationData(client, organizationId);
-    const groupStudentsResult = await client
-      .from("group_students")
-      .select("id,group_id,student_id,status")
-      .eq("student_id", student.id);
-    const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Группы ученика");
-    const visibleGroups = activeWorkspaceGroups(groups, groupStudents);
+    const { courses, student, users, visibleGroups } = await getStudentLearningContext(client, organizationId, userId, "обзор");
     const activeGroupIds = new Set(visibleGroups.map((group) => group.id));
     const courseIds = new Set(visibleGroups.map((group) => group.course_id));
     const courseMap = byId(courses);
@@ -4608,8 +4651,10 @@ export async function getStudentOverview(organizationId: string, email: string) 
       client
         .from("payments")
         .select("id,student_id,course_id,group_id,amount,currency,period_start,period_end,due_at,status")
+        .eq("organization_id", organizationId)
         .eq("student_id", student.id)
-        .order("due_at", { ascending: true, nullsFirst: false }),
+        .order("due_at", { ascending: true, nullsFirst: false })
+        .limit(5),
     ]);
     const lessons = rows<LessonRow>(lessonsResult, "Ближайшие занятия ученика");
     const scheduleRules = rows<ScheduleRuleRow>(scheduleRulesResult, "Правила расписания ученика");
@@ -4677,23 +4722,14 @@ export async function getStudentOverview(organizationId: string, email: string) 
   });
 }
 
-export async function getStudentSchedule(organizationId: string, email: string) {
+export async function getStudentSchedule(organizationId: string, userId: string) {
   return readSupabaseData<StudentScheduleData>(async (client) => {
-    const user = await getUserByEmail(client, email);
-    const studentResult = await client
-      .from("students")
-      .select("id,user_id,name,phone,email,status")
-      .eq("organization_id", organizationId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-    const student = single<StudentRow>(studentResult, "Карточка ученика");
-    const { courses, groups, users } = await getBaseOrganizationData(client, organizationId);
-    const groupStudentsResult = await client
-      .from("group_students")
-      .select("id,group_id,student_id,status")
-      .eq("student_id", student.id);
-    const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Группы расписания ученика");
-    const visibleGroups = activeWorkspaceGroups(groups, groupStudents);
+    const { courses, student, users, visibleGroups } = await getStudentLearningContext(
+      client,
+      organizationId,
+      userId,
+      "расписание",
+    );
     const activeGroupIds = new Set(visibleGroups.map((group) => group.id));
     const [lessonsResult, scheduleRulesResult] =
       activeGroupIds.size > 0
@@ -4741,53 +4777,36 @@ export async function getStudentSchedule(organizationId: string, email: string) 
   });
 }
 
-export async function getStudentAttendance(organizationId: string, email: string) {
+export async function getStudentAttendance(organizationId: string, userId: string) {
   return readSupabaseData<StudentAttendanceData>(async (client) => {
-    const user = await getUserByEmail(client, email);
-    const studentResult = await client
-      .from("students")
-      .select("id,user_id,name,phone,email,status")
-      .eq("organization_id", organizationId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-    const student = single<StudentRow>(studentResult, "Карточка ученика");
-    const { courses, groups } = await getBaseOrganizationData(client, organizationId);
-    const groupStudentsResult = await client
-      .from("group_students")
-      .select("id,group_id,student_id,status")
-      .eq("student_id", student.id);
-    const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Группы посещаемости ученика");
-    const visibleGroups = activeWorkspaceGroups(groups, groupStudents);
+    const { courses, student, visibleGroups } = await getStudentLearningContext(client, organizationId, userId, "посещаемость", {
+      includeUsers: false,
+    });
     const activeGroupIds = new Set(visibleGroups.map((group) => group.id));
-    const lessonsResult =
+    const lessonsWithEntriesResult =
       activeGroupIds.size > 0
         ? await client
             .from("lessons")
-            .select("id,course_id,group_id,teacher_id,starts_at,ends_at,topic")
+            .select(
+              "id,course_id,group_id,teacher_id,starts_at,ends_at,topic,journal_entries!inner(id,lesson_id,student_id,attendance_mark,teacher_comment,is_visible_to_student)",
+            )
             .eq("organization_id", organizationId)
             .in("group_id", [...activeGroupIds])
+            .eq("journal_entries.student_id", student.id)
             .lte("starts_at", new Date().toISOString())
             .order("starts_at", { ascending: false })
             .limit(40)
         : { data: [], error: null };
-    const lessons = rows<LessonRow>(lessonsResult, "Посещаемость ученика");
-    const lessonIds = lessons.map((lesson) => lesson.id);
-    const journalResult =
-      lessonIds.length > 0
-        ? await client
-            .from("journal_entries")
-            .select("id,lesson_id,student_id,attendance_mark,lesson_mark,teacher_comment,internal_comment,is_visible_to_student")
-            .eq("student_id", student.id)
-            .in("lesson_id", lessonIds)
-        : { data: [], error: null };
-    const journalEntries = rows<JournalEntryRow>(journalResult, "Записи посещаемости ученика").filter(
-      (entry) => entry.student_id === student.id,
-    );
-    const journalByLessonId = new Map(journalEntries.map((entry) => [entry.lesson_id, entry]));
+    const lessons = rows<StudentAttendanceLessonRow>(lessonsWithEntriesResult, "Посещаемость ученика");
     const courseMap = byId(courses);
     const groupMap = byId(visibleGroups);
     const attendance = lessons.map((lesson) => {
-      const entry = journalByLessonId.get(lesson.id);
+      const lessonEntries = Array.isArray(lesson.journal_entries)
+        ? lesson.journal_entries
+        : lesson.journal_entries
+          ? [lesson.journal_entries]
+          : [];
+      const entry = lessonEntries.find((item) => item.student_id === student.id);
       const status = studentAttendanceStatus(lesson, entry);
       const group = lesson.group_id ? groupMap.get(lesson.group_id) : null;
 

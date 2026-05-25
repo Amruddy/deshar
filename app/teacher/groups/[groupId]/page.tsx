@@ -12,7 +12,7 @@ type TeacherGroupPageProps = {
 export default async function TeacherGroupPage({ params }: TeacherGroupPageProps) {
   const session = await requireWorkspace("teacher");
   const { groupId } = await params;
-  const result = await getTeacherGroupDetail(session.organizationId, session.email, groupId);
+  const result = await getTeacherGroupDetail(session.organizationId, session.userId, session.name, groupId);
 
   return (
     <SupabaseDataPage

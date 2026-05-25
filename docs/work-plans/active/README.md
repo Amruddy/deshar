@@ -4,7 +4,7 @@
 
 Текущий активный технический план:
 
-не выбран.
+`40-post-stitch-runtime-performance-plan.md`
 
 Последний завершенный stage:
 
@@ -12,11 +12,11 @@
 
 Следующий ожидаемый stage:
 
-требует выбора и оформления отдельным work plan.
+`Release Stage 12. Post-Stitch Runtime Performance`.
 
 Первый блок активного stage:
 
-не выбран.
+измерить baseline после Stitch UI/UX Transfer и ускорить самые заметные runtime/Supabase bottlenecks.
 
 Codex перед разработкой должен читать:
 
