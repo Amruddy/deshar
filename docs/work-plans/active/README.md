@@ -4,19 +4,20 @@
 
 Текущий активный технический план:
 
-`40-post-stitch-runtime-performance-plan.md`
+не выбран.
 
 Последний завершенный stage:
 
-`../completed/39-stitch-ui-ux-transfer-plan.md`
+`../completed/40-post-stitch-runtime-performance-plan.md`
 
 Следующий ожидаемый stage:
 
-`Release Stage 12. Post-Stitch Runtime Performance`.
+не выбран. Перед следующим кодовым stage нужно создать или обновить активный
+план на основе roadmap и результатов `Release Stage 12`.
 
 Первый блок активного stage:
 
-измерить baseline после Stitch UI/UX Transfer и ускорить самые заметные runtime/Supabase bottlenecks.
+не выбран.
 
 Codex перед разработкой должен читать:
 
@@ -25,4 +26,5 @@ Codex перед разработкой должен читать:
 - `docs/roadmap/README.md`;
 - связанные спецификации из `docs/specs/`.
 
-Перед новым кодовым stage нужно обновить `main`, создать отдельную stage-ветку и работать по активному плану.
+Перед новым кодовым stage нужно обновить `main`, создать отдельную stage-ветку
+и работать по активному плану.
