@@ -29,6 +29,9 @@
   новые UI-изменения должны идти отдельным plan и не смешиваться с auth,
   hardening или performance-правками.
 - Каждый stage должен иметь work plan, проверки, commit, push и историю в completed plans.
+- `NN-...-plan.md` - сквозной номер документа work-plan в `active`/`completed`;
+  `Release Stage N` - номер этапа внутри `Release 1.0`. Эти номера не обязаны
+  совпадать.
 
 ## 4. Stages Release 1.0
 
@@ -287,11 +290,48 @@ invite-only правил и security boundaries.
 - новая визуальная переработка;
 - production deploy, домен, SMTP или смена Supabase region.
 
-## 5. Следующий stage
+### Release Stage 11. Stitch UI/UX Transfer
 
-Следующий кодовый stage:
+Статус:
 
-не выбран.
+завершен, PR #66.
 
-Перед следующим кодовым stage нужно выбрать новую цель Release 1.0 и оформить
-активный work plan в `docs/work-plans/active/`.
+План:
+
+`docs/work-plans/completed/39-stitch-ui-ux-transfer-plan.md`
+
+Цель:
+
+перенести визуальное направление Google Stitch в реальные страницы приложения
+без изменения product-scope, ролей, auth-flow и модели данных.
+
+Входит:
+
+- перенос визуального направления Stitch в app shell и рабочие экраны;
+- обновление рабочих страниц преподавателя и ученика;
+- обновление таблиц, сигналов, состояний и плотности интерфейса;
+- сохранение текущей бизнес-логики и маршрутов;
+- проверка, что локальные Stitch-референсы не коммитятся в репозиторий.
+
+Не входит:
+
+- новый product-scope;
+- изменение production auth;
+- изменение схемы данных;
+- performance-оптимизации после переноса интерфейса.
+
+## 5. Текущий активный stage
+
+Текущий кодовый stage:
+
+`Release Stage 12. Post-Stitch Runtime Performance`.
+
+План:
+
+`docs/work-plans/active/40-post-stitch-runtime-performance-plan.md`
+
+Цель:
+
+измерить baseline после завершенного Stitch UI/UX Transfer и ускорить самые
+заметные runtime/Supabase bottlenecks без нового redesign и без изменения
+product-scope.

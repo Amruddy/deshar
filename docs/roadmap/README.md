@@ -15,13 +15,22 @@
 - завершенные планы: `docs/work-plans/completed/`;
 - исторический roadmap MPMF 1.0: `docs/roadmap/mpmf-1-implementation-roadmap.md`.
 
+Правило нумерации:
+
+- `NN-...-plan.md` - сквозной номер документа work-plan в папках
+  `docs/work-plans/active/` и `docs/work-plans/completed/`;
+- `Release Stage N` - номер этапа внутри `Release 1.0`;
+- эти номера не обязаны совпадать: например,
+  `40-post-stitch-runtime-performance-plan.md` описывает
+  `Release Stage 12. Post-Stitch Runtime Performance`.
+
 ## 1. Текущий статус
 
 - Текущий большой блок: `Release 1.0`.
-- Последний завершенный кодовый stage: `Release 1.0 Post-registration Performance`, PR #63.
-- Активный stage: не выбран.
-- Активный план: не выбран.
-- Следующий stage: требует выбора и оформления отдельным work plan.
+- Последний завершенный кодовый stage: `Release Stage 11. Stitch UI/UX Transfer`, PR #66.
+- Активный stage: `Release Stage 12. Post-Stitch Runtime Performance`.
+- Активный план: `docs/work-plans/active/40-post-stitch-runtime-performance-plan.md`.
+- Следующий stage: зависит от результатов post-Stitch performance baseline.
 - Предыдущий блок: `MPMF 1.0`, завершен и смержен в `main`.
 - Запись завершения MPMF 1.0: `docs/release/mpmf-1-release-readiness.md`.
 - Запись завершения Production Hardening: `docs/release/release-1-production-hardening.md`.
@@ -87,29 +96,33 @@ Roadmap:
 production auth. Будущие изменения UI должны проходить через отдельные
 design/performance stages и не смешиваться с правками модели данных.
 
-## 5. Следующий подплан
+## 5. Активный подплан
 
-Следующий подплан не выбран.
+Активный подплан выбран:
 
-Roadmap:
+`Release Stage 12. Post-Stitch Runtime Performance`
 
-`docs/roadmap/release-1-roadmap.md`
+План:
 
-Перед новым кодовым stage нужно выбрать следующий stage Release 1.0, создать
-или обновить активный work plan в `docs/work-plans/active/` и связать его со
-спецификациями из `docs/specs/`.
+`docs/work-plans/active/40-post-stitch-runtime-performance-plan.md`
 
-## 6. Следующие крупные stages Release 1.0
+Задача:
 
-1. `Auth Stage 2. Supabase Auth Session Foundation`.
-2. `Auth Stage 3. Account Linking And Schema`.
-3. `Auth Stage 4. Admin Invitations`.
-4. `Auth Stage 5. Auth Smoke And Hardening`.
-5. `Final Design System And UX Polish`.
-6. `New Visual Design`.
-7. `Functional UX Fixes Before Hardening`.
-8. `Production Hardening` - завершен, PR #57.
-9. `Release Candidate Smoke And Notes` - завершен, PR #59.
-10. `Release 1.0 Performance Baseline And Supabase Optimization` - завершен, PR #61.
-11. `Release 1.0 Public Registration And Solo Teacher` - завершен, PR #62.
-12. `Release 1.0 Post-registration Performance` - завершен, PR #63.
+измерить baseline после Stitch UI/UX Transfer и ускорить самые заметные
+runtime/Supabase bottlenecks без нового redesign и без изменения product-scope.
+
+## 6. Stages Release 1.0
+
+1. `Release Stage 1. Release Roadmap Setup` - завершен.
+2. `Release Stage 2. Production Auth And Real Accounts` - завершен, PR #52.
+3. `Release Stage 3. Final Design System And UX Polish` - завершен, PR #53.
+4. `Release Stage 4. New Visual Design` - завершен, PR #54.
+5. `Release Stage 5. Functional UX Fixes Before Hardening` - завершен, PR #56.
+6. `Release Stage 6. Production Hardening` - завершен, PR #57.
+7. `Release Stage 7. Release Candidate Smoke And Notes` - завершен, PR #59.
+8. `Release Stage 8. Performance Baseline And Supabase Optimization` - завершен, PR #61.
+9. `Release Stage 9. Public Registration And Solo Teacher` - завершен, PR #62.
+10. `Release Stage 10. Post-registration Performance` - завершен, PR #63.
+11. `Release Stage 11. Stitch UI/UX Transfer` - завершен, PR #66.
+12. `Release Stage 12. Post-Stitch Runtime Performance` - активен, план
+    `docs/work-plans/active/40-post-stitch-runtime-performance-plan.md`.
