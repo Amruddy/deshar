@@ -28,7 +28,7 @@ export default async function TeacherStudentsPage() {
                 header: "Действие",
                 render: (student) => (
                   <Link className="secondary-button compact-button" href={`/teacher/students/${student.id}`}>
-                    Открыть прогресс
+                    Прогресс
                   </Link>
                 ),
               },

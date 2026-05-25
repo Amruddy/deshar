@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { InfoList, MetricGrid, SupabaseDataPage } from "@/app/components/supabase-data-page";
+import { InfoList, SupabaseDataPage } from "@/app/components/supabase-data-page";
 import { getTeacherStudentDetail } from "@/app/lib/data/supabase-read";
 import { requireWorkspace } from "@/app/lib/dev-auth";
 import {
@@ -78,10 +78,6 @@ export default async function TeacherStudentPage({ params }: TeacherStudentPageP
                 </div>
               </aside>
             </section>
-
-            <div className="section">
-              <MetricGrid items={data.metrics} />
-            </div>
 
             <section className="teacher-progress-layout section">
               <div className="panel" id="progress-rules">

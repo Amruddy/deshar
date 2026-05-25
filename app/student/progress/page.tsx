@@ -14,21 +14,6 @@ export default async function StudentProgressPage() {
     >
       {(data) => (
         <div className="student-dashboard">
-          <section className="student-compact-grid">
-            <article className="panel student-compact-card">
-              <h2>Правила</h2>
-              <strong>{data.rules.length}</strong>
-            </article>
-            <article className="panel student-compact-card">
-              <h2>Ошибки</h2>
-              <strong>{data.errors.length}</strong>
-            </article>
-            <article className="panel student-compact-card">
-              <h2>Что повторить</h2>
-              <strong>{data.records.length}</strong>
-            </article>
-          </section>
-
           <section className="student-learning-grid">
             <article className="panel student-progress-section">
               <h2>Правила</h2>

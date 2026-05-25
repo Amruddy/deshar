@@ -2,10 +2,10 @@
 
 ## 0. Статус
 
-- Статус плана: активный план, кодовая реализация еще не начата.
+- Статус плана: завершен, кодовая реализация выполнена.
 - Большой блок: `Release 1.0`.
 - Stage релиза: `Release Stage 11. Stitch UI/UX Transfer`.
-- Рабочая ветка для реализации: `feat/stitch-ui-ux-transfer`.
+- Рабочая ветка для реализации: `feat/stitch-ui-ux-transfer-implementation`.
 - Предыдущий завершенный plan: `../completed/38-post-registration-performance-plan.md`.
 - Roadmap релиза: `docs/roadmap/release-1-roadmap.md`.
 - Связанные спецификации: `docs/specs/04-visual-rules.md`, `docs/specs/04-interface-by-role.md`, `docs/specs/01-functional-map.md`.

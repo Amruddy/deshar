@@ -4338,3 +4338,921 @@ td a,
     max-width: 150px;
   }
 }
+
+/* Release Stage 11. Stitch UI/UX Transfer */
+:root {
+  --background: #f3f5f4;
+  --shell: #dee4e2;
+  --surface: #ffffff;
+  --surface-muted: #f2f4f3;
+  --surface-strong: #e6e9e8;
+  --border: #d9e2dd;
+  --border-strong: #bfc9c3;
+  --text: #191c1c;
+  --muted: #59605e;
+  --primary: #064e3b;
+  --primary-strong: #003527;
+  --primary-soft: #dbe1df;
+  --accent: #2b6954;
+  --accent-soft: #e7f3ee;
+  --warning: #765900;
+  --warning-soft: #fff3d6;
+  --danger: #ba1a1a;
+  --danger-soft: #ffdad6;
+  --shadow: none;
+  --shadow-raised: 0 4px 20px rgb(0 0 0 / 5%);
+  --radius: 32px;
+  --control-radius: 16px;
+  --sidebar-width: 260px;
+  --content-max: 1440px;
+  --gap: 16px;
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+  background: var(--background);
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  height: 100vh;
+  flex-direction: column;
+  gap: 24px;
+  overflow: hidden;
+  border: 0;
+  border-right: 1px solid var(--border-strong);
+  border-radius: 0;
+  background: var(--shell);
+  box-shadow: none;
+  padding: 24px 0;
+}
+
+.brand {
+  display: grid;
+  min-height: auto;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  margin: 0 16px 0;
+  color: var(--primary);
+}
+
+.brand-mark {
+  display: none;
+}
+
+.brand-text {
+  align-self: auto;
+  color: var(--primary);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.brand::after {
+  color: var(--muted);
+  content: "";
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.sidebar-section {
+  display: grid;
+  min-height: 0;
+  gap: 10px;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.sidebar-label {
+  margin: 0 16px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.side-nav {
+  gap: 0;
+}
+
+.app-nav-link {
+  min-height: 42px;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 14px;
+  border: 0;
+  border-left: 3px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 8px 16px 8px 13px;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.app-nav-link:hover {
+  border-color: transparent;
+  background: rgb(219 225 223 / 45%);
+  color: var(--primary);
+}
+
+.app-nav-link[data-active="true"] {
+  border-left-color: var(--primary);
+  background: rgb(219 225 223 / 62%);
+  color: var(--primary);
+  box-shadow: none;
+}
+
+.app-nav-icon {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.workspace-switch {
+  align-self: stretch;
+  margin: auto 16px 0;
+}
+
+.workspace-switch-button {
+  min-height: 38px;
+  border-color: var(--border-strong);
+  border-radius: var(--control-radius);
+  background: rgb(255 255 255 / 72%);
+  color: var(--primary);
+}
+
+.sidebar-card {
+  display: grid;
+  align-self: stretch;
+  gap: 6px;
+  margin: 0 16px;
+  border: 0;
+  border-top: 1px solid var(--border-strong);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 16px 0 0;
+}
+
+.sidebar-card strong {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.sidebar-card p,
+.sidebar-user-email {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.sidebar-card-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.workspace {
+  display: flex;
+  min-width: 0;
+  min-height: 100vh;
+  flex-direction: column;
+  gap: 0;
+}
+
+.workspace-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  display: flex;
+  min-height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 0;
+  border-bottom: 1px solid var(--border-strong);
+  border-radius: 0;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: none;
+  padding: 0 24px;
+}
+
+.workspace-topbar strong {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 0;
+}
+
+.topbar-search {
+  display: flex;
+  width: min(320px, 42vw);
+  align-items: center;
+}
+
+.topbar-search input {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--control-radius);
+  background: var(--surface-muted);
+  color: var(--text);
+  padding: 0 14px;
+}
+
+.main {
+  width: min(var(--content-max), calc(100% - 48px));
+  margin: 0 auto;
+  padding: 24px 0 56px;
+}
+
+.page-heading {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+
+.page-heading > .status,
+.page-heading > p,
+.page-heading > div > .status,
+.page-heading > div > p {
+  display: inline-flex;
+}
+
+.page-heading h1 {
+  max-width: 980px;
+  margin: 0;
+  color: var(--text);
+  font-size: 32px;
+  font-weight: 750;
+  letter-spacing: 0;
+  line-height: 1.16;
+}
+
+.page-heading p {
+  display: block;
+  max-width: 820px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.panel,
+.journal-sheet {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: none;
+  padding: 24px;
+}
+
+.panel h2,
+.panel h3,
+.journal-sheet h2 {
+  color: var(--text);
+  font-weight: 720;
+}
+
+.panel p,
+.journal-sheet p {
+  color: var(--muted);
+}
+
+.metric-grid,
+.grid {
+  gap: var(--gap);
+}
+
+.metric-card {
+  min-height: 124px;
+  justify-content: space-between;
+}
+
+.metric-card span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.metric-card strong {
+  color: var(--text);
+  font-size: 32px;
+  font-weight: 760;
+}
+
+.status,
+.payment-status-pill {
+  min-height: 0;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.button,
+.danger-button,
+.secondary-button {
+  min-height: 42px;
+  border-radius: var(--control-radius);
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.button {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.secondary-button {
+  border-color: var(--primary);
+  background: var(--surface);
+  color: var(--primary);
+}
+
+.compact-button,
+.table-wrap .button,
+.table-wrap .secondary-button {
+  min-height: 36px;
+  border-radius: 14px;
+  padding: 0 12px;
+}
+
+input,
+select,
+textarea {
+  border-color: var(--border-strong);
+  border-radius: var(--control-radius);
+  background: #ffffff;
+}
+
+.table-wrap,
+.journal-table-wrap,
+.panel > .table-wrap,
+.panel > .journal-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+}
+
+table,
+.data-table {
+  min-width: 760px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--border);
+  padding: 12px 14px;
+  vertical-align: top;
+}
+
+th {
+  background: var(--surface-muted);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.data-table tbody tr:hover,
+.data-table tbody tr:hover td {
+  background: rgb(219 225 223 / 22%);
+}
+
+.info-list {
+  gap: 0;
+}
+
+.info-row {
+  gap: 4px;
+  border-top-color: var(--border);
+  padding: 12px 0;
+}
+
+.info-row span,
+.table-detail span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.empty-state {
+  border-radius: 22px;
+  background: var(--surface-muted);
+}
+
+.teacher-overview-grid,
+.overview-grid {
+  gap: var(--gap);
+}
+
+.teacher-highlight {
+  border-radius: 24px;
+  background: var(--surface-muted);
+}
+
+.teacher-dashboard-hero {
+  align-items: stretch;
+  margin-bottom: var(--gap);
+}
+
+.teacher-next-lesson-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 220px;
+  align-content: start;
+}
+
+.teacher-next-lesson-card::after {
+  position: absolute;
+  top: -72px;
+  right: -52px;
+  width: 190px;
+  height: 190px;
+  border-radius: 999px;
+  background: rgb(6 78 59 / 8%);
+  content: "";
+}
+
+.teacher-next-lesson-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.teacher-next-lesson-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: start;
+  margin: 14px 0 22px;
+}
+
+.teacher-next-lesson-head h2 {
+  margin-bottom: 6px;
+  font-size: 32px;
+  line-height: 1.12;
+}
+
+.teacher-next-lesson-head strong {
+  color: var(--primary);
+  font-size: 22px;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+.signal-item {
+  border-radius: 16px;
+}
+
+.teacher-journal-shortcut {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.journal-table-wrap {
+  border-color: var(--border-strong);
+}
+
+.journal-table {
+  min-width: 100%;
+}
+
+.journal-table th,
+.journal-table td {
+  width: 72px;
+  min-width: 72px;
+}
+
+.journal-student-head,
+.journal-student-name {
+  width: 190px;
+  min-width: 190px;
+  max-width: 190px;
+  background: var(--surface);
+}
+
+.journal-cell-input {
+  min-height: 46px;
+  color: var(--primary-strong);
+}
+
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .app-shell {
+    display: block;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .workspace-topbar {
+    min-height: 60px;
+    padding: 0 16px;
+  }
+
+  .topbar-search {
+    display: none;
+  }
+
+  .main {
+    width: min(var(--content-max), calc(100% - 32px));
+    padding: 20px 0 112px;
+  }
+
+  .mobile-nav {
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    z-index: 20;
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    background: rgb(255 255 255 / 96%);
+    box-shadow: var(--shadow-raised);
+    padding: 8px;
+  }
+
+  .mobile-nav .app-nav-link {
+    min-width: 92px;
+    min-height: 48px;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 2px;
+    border: 0;
+    border-radius: 18px;
+    padding: 6px 8px;
+    font-size: 10px;
+    text-align: center;
+  }
+
+  .mobile-nav .app-nav-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* User review pass: remove redundant topbar and nested card styling */
+.workspace-topbar {
+  display: none;
+}
+
+.brand::after {
+  display: none;
+  content: none;
+}
+
+.main {
+  padding-top: 24px;
+}
+
+.panel .teacher-highlight,
+.panel .signal-item,
+.panel .schedule-card,
+.panel .student-compact-item,
+.panel .student-list-item,
+.panel .teacher-payment-row,
+.panel .lesson-row,
+.panel .student-schedule-card,
+.panel .weekday-options,
+.panel .entry-preview-table,
+.panel .entry-preview-row,
+.panel .registration-form,
+.panel .action-button,
+.panel .lesson-progress-cell,
+.panel .info-row,
+.panel .teacher-list-item,
+.panel .teacher-group-card,
+.panel .student-group-card,
+.panel .payment-row,
+.panel .student-progress-item,
+.panel > .panel {
+  border-right: 0;
+  border-left: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.panel .teacher-highlight,
+.panel .schedule-card,
+.panel .student-schedule-card,
+.panel .weekday-options,
+.panel .lesson-row,
+.panel .student-list-item,
+.panel .teacher-payment-row,
+.panel .lesson-progress-cell,
+.panel .info-row,
+.panel .teacher-list-item,
+.panel .teacher-group-card,
+.panel .student-group-card,
+.panel .payment-row,
+.panel .student-progress-item,
+.panel > .panel {
+  border-top: 1px solid var(--border);
+  padding: 14px 0;
+}
+
+.panel .teacher-highlight:first-child,
+.panel .schedule-card:first-child,
+.panel .student-schedule-card:first-child,
+.panel .weekday-options:first-child,
+.panel .lesson-row:first-child,
+.panel .student-list-item:first-child,
+.panel .teacher-payment-row:first-child,
+.panel .lesson-progress-cell:first-child,
+.panel .info-row:first-child,
+.panel .teacher-list-item:first-child,
+.panel .teacher-group-card:first-child,
+.panel .student-group-card:first-child,
+.panel .payment-row:first-child,
+.panel .student-progress-item:first-child,
+.panel > .panel:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.panel .signal-item {
+  border-top: 1px solid var(--border);
+  padding: 12px 0 0;
+}
+
+.panel .signal-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.panel .action-button,
+.panel .registration-form {
+  border: 0;
+  padding: 0;
+}
+
+.teacher-next-lesson-card .teacher-highlight,
+.teacher-next-lesson-card .signal-item {
+  border: 0;
+}
+
+/* User review pass 2: remove nested card surfaces while keeping Stitch-like panel padding */
+.panel > .table-wrap,
+.panel > .journal-table-wrap,
+.journal-sheet > .journal-table-wrap,
+.panel .table-wrap,
+.panel .journal-table-wrap {
+  width: 100%;
+  max-width: none;
+  margin-right: 0;
+  margin-left: 0;
+  overflow-x: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.panel > .table-wrap:first-child,
+.panel > .journal-table-wrap:first-child,
+.journal-sheet > .journal-table-wrap:first-child,
+.panel .table-wrap:first-child,
+.panel .journal-table-wrap:first-child {
+  margin-top: 0;
+}
+
+.panel > .table-wrap:last-child,
+.panel > .journal-table-wrap:last-child,
+.journal-sheet > .journal-table-wrap:last-child,
+.panel .table-wrap:last-child,
+.panel .journal-table-wrap:last-child {
+  margin-bottom: 0;
+  border-bottom: 0;
+}
+
+.panel > .table-wrap th:first-child,
+.panel > .table-wrap td:first-child,
+.panel .table-wrap th:first-child,
+.panel .table-wrap td:first-child,
+.panel > .journal-table-wrap th:first-child,
+.panel > .journal-table-wrap td:first-child,
+.panel .journal-table-wrap th:first-child,
+.panel .journal-table-wrap td:first-child {
+  padding-left: 0;
+}
+
+.panel > .table-wrap th:last-child,
+.panel > .table-wrap td:last-child,
+.panel .table-wrap th:last-child,
+.panel .table-wrap td:last-child,
+.panel > .journal-table-wrap th:last-child,
+.panel > .journal-table-wrap td:last-child,
+.panel .journal-table-wrap th:last-child,
+.panel .journal-table-wrap td:last-child {
+  padding-right: 0;
+}
+
+.panel > .table-wrap thead th,
+.panel .table-wrap thead th,
+.panel > .journal-table-wrap thead th,
+.panel .journal-table-wrap thead th {
+  background: transparent;
+  border-bottom-color: var(--outline-variant, var(--border-strong));
+}
+
+.panel > .table-wrap tbody tr:hover td,
+.panel .table-wrap tbody tr:hover td,
+.panel > .journal-table-wrap tbody tr:hover td,
+.panel .journal-table-wrap tbody tr:hover td {
+  background: rgb(219 225 223 / 25%);
+}
+
+.panel .teacher-highlight,
+.panel .schedule-card,
+.panel .student-schedule-card,
+.panel .weekday-options,
+.panel .lesson-row,
+.panel .student-list-item,
+.panel .teacher-payment-row,
+.panel .lesson-progress-cell,
+.panel .signal-item,
+.panel .info-row,
+.panel .teacher-list-item,
+.panel .teacher-group-card,
+.panel .student-group-card,
+.panel .payment-row,
+.panel .student-progress-item,
+.panel > .panel {
+  margin-right: 0;
+  margin-left: 0;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.panel .teacher-highlight:first-child,
+.panel .schedule-card:first-child,
+.panel .student-schedule-card:first-child,
+.panel .weekday-options:first-child,
+.panel .lesson-row:first-child,
+.panel .student-list-item:first-child,
+.panel .teacher-payment-row:first-child,
+.panel .lesson-progress-cell:first-child,
+.panel .signal-item:first-child,
+.panel .info-row:first-child,
+.panel .teacher-list-item:first-child,
+.panel .teacher-group-card:first-child,
+.panel .student-group-card:first-child,
+.panel .payment-row:first-child,
+.panel .student-progress-item:first-child,
+.panel > .panel:first-child {
+  margin-top: 0;
+}
+
+.panel .signal-item {
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.panel .signal-item > strong {
+  width: 32px;
+  min-height: 32px;
+  border-radius: 999px;
+  background: var(--surface-container-low, var(--surface-muted));
+  font-size: 13px;
+}
+
+.panel .signal-item[data-tone="danger"] > strong {
+  background: rgb(255 218 214 / 60%);
+}
+
+.panel .signal-item[data-tone="warning"] > strong {
+  background: rgb(255 243 214 / 75%);
+}
+
+.panel .signal-item[data-tone="ok"] > strong {
+  background: rgb(219 225 223 / 70%);
+}
+
+.panel .teacher-highlight strong,
+.panel .schedule-card strong,
+.panel .student-schedule-card strong {
+  font-weight: 650;
+}
+
+@media (max-width: 760px) {
+  .workspace-topbar {
+    align-items: center;
+  }
+
+  .workspace-topbar > div:first-child {
+    min-width: 0;
+  }
+
+  .workspace-topbar strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .page-heading h1 {
+    font-size: 26px;
+  }
+
+  .panel,
+  .journal-sheet {
+    border-radius: 24px;
+    padding: 16px;
+  }
+
+  .metric-grid,
+  .grid,
+  .overview-grid,
+  .teacher-overview-grid,
+  .student-dashboard-top,
+  .student-compact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .table-wrap,
+  .panel > .table-wrap,
+  .panel .table-wrap,
+  .panel > .journal-table-wrap,
+  .panel .journal-table-wrap,
+  .journal-sheet > .journal-table-wrap {
+    width: 100%;
+    margin-right: 0;
+    margin-left: 0;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+
+  .panel .teacher-highlight,
+  .panel .schedule-card,
+  .panel .student-schedule-card,
+  .panel .weekday-options,
+  .panel .lesson-row,
+  .panel .student-list-item,
+  .panel .teacher-payment-row,
+  .panel .lesson-progress-cell,
+  .panel .signal-item,
+  .panel .info-row,
+  .panel .teacher-list-item,
+  .panel .teacher-group-card,
+  .panel .student-group-card,
+  .panel .payment-row,
+  .panel .student-progress-item,
+  .panel > .panel {
+    margin-right: 0;
+    margin-left: 0;
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  table,
+  .data-table {
+    min-width: 680px;
+  }
+
+  .journal-table {
+    min-width: 0;
+  }
+}

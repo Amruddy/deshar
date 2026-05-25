@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DataTable, MetricGrid, SupabaseDataPage } from "@/app/components/supabase-data-page";
+import { DataTable, SupabaseDataPage } from "@/app/components/supabase-data-page";
 import { getTeacherAttendance } from "@/app/lib/data/supabase-read";
 import { requireWorkspace } from "@/app/lib/dev-auth";
 
@@ -60,8 +60,6 @@ export default async function TeacherAttendancePage({ searchParams }: TeacherAtt
     >
       {(data) => (
         <>
-          <MetricGrid items={data.metrics} />
-
           <section className="panel section payment-list-panel" data-attendance-summary="ready">
             <div className="section-heading payment-list-heading">
               <div>

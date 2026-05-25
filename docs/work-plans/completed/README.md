@@ -40,6 +40,7 @@
 - `36-performance-baseline-supabase-plan.md` - performance baseline and Supabase optimization Release 1.0: измеримый baseline, оптимизация teacher loaders, отчет по скорости и воспроизводимый `perf:baseline`.
 - `37-public-registration-solo-teacher-plan.md` - публичная регистрация владельца новой школы и `solo_teacher`, email confirmation, ограниченный admin-доступ для преподавателя-одиночки.
 - `38-post-registration-performance-plan.md` - post-registration performance Release 1.0: ускорение protected routes после регистрации и входа, request-level memoization session/profile resolver, сокращение лишних Supabase round-trip и повторный performance/auth/roles smoke.
+- `39-stitch-ui-ux-transfer-plan.md` - Stitch UI/UX Transfer Release 1.0: перенос визуального направления Google Stitch в реальные страницы, обновление app shell, рабочих экранов преподавателя и ученика, таблиц, сигналов и плотности интерфейса без коммита локальных Stitch-референсов.
 - `01-initial-product-implementation-plan.md` - исторический план первой рабочей реализации.
 - `02-system-a-ui-implementation-plan.md` - исторический план UI-направления System A.
 
