@@ -58,7 +58,7 @@ export default async function TeacherLessonPage({ params }: TeacherLessonPagePro
                   </p>
                   <div className="button-row">
                     <Link className="secondary-button compact-button" href={data.journalHref}>
-                      Открыть журнал
+                      Журнал
                     </Link>
                   </div>
                 </div>
@@ -215,7 +215,7 @@ export default async function TeacherLessonPage({ params }: TeacherLessonPagePro
                               <div className="lesson-progress-cell">
                                 <span>{student.hasProgressRecord ? "Есть запись" : "Нет записи"}</span>
                                 <Link className="secondary-button compact-button" href={student.progressHref}>
-                                  Открыть прогресс ученика
+                                  Прогресс
                                 </Link>
                               </div>
                             </td>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { InfoList, MetricGrid, SupabaseDataPage } from "@/app/components/supabase-data-page";
+import { InfoList, SupabaseDataPage } from "@/app/components/supabase-data-page";
 import { getTeacherOverview } from "@/app/lib/data/supabase-read";
 import { requireWorkspace } from "@/app/lib/dev-auth";
 
@@ -13,9 +13,74 @@ export default async function TeacherPage() {
       description="Мои группы, ближайшие занятия и ученики, которым нужно внимание."
       result={result}
     >
-      {(data) => (
+      {(data) => {
+        const nextLesson = data.upcomingLessons[0];
+
+        return (
         <>
-          <MetricGrid items={data.metrics} />
+          <section className="teacher-overview-grid teacher-dashboard-hero">
+            <div className="panel teacher-main-panel teacher-next-lesson-card">
+              <span className="status">Ближайший урок</span>
+              {nextLesson ? (
+                <>
+                  <div className="teacher-next-lesson-head">
+                    <div>
+                      <h2>{nextLesson.title}</h2>
+                      <p>{nextLesson.subtitle}</p>
+                    </div>
+                    <strong>{nextLesson.when}</strong>
+                  </div>
+                  <div className="button-row">
+                    <Link className="button" href={`/teacher/lessons/${nextLesson.id}`}>
+                      Урок
+                    </Link>
+                    {data.journalShortcut ? (
+                      <Link className="secondary-button" href={data.journalShortcut.href}>
+                        Журнал
+                      </Link>
+                    ) : null}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h2>Ближайших уроков нет</h2>
+                  <p>Когда администратор создаст занятия по расписанию, ближайший урок появится здесь.</p>
+                  <div className="button-row">
+                    <Link className="secondary-button" href="/teacher/groups">
+                      Группы
+                    </Link>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <aside className="panel teacher-side-panel">
+              <div className="section-heading">
+                <h2>Сигналы</h2>
+              </div>
+              <div className="signal-list">
+                {data.problemSignals.length > 0 ? (
+                  data.problemSignals.map((signal, index) => (
+                    <div className="signal-item" data-tone={signal.tone} key={`${signal.label}-${index}`}>
+                      <strong>!</strong>
+                      <div>
+                        <span>{signal.label}</span>
+                        <p>{signal.detail}</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="signal-item" data-tone="ok">
+                    <strong>OK</strong>
+                    <div>
+                      <span>Нет срочных сигналов</span>
+                      <p>Слабая посещаемость и оплата к вниманию не найдены.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </aside>
+          </section>
 
           <section className="panel section teacher-journal-shortcut">
             <div className="teacher-journal-copy">
@@ -34,11 +99,11 @@ export default async function TeacherPage() {
             </div>
             {data.journalShortcut ? (
               <Link className="button" href={data.journalShortcut.href}>
-                Открыть журнал
+                Журнал
               </Link>
             ) : (
               <Link className="secondary-button" href="/teacher/groups">
-                Открыть группы
+                Группы
               </Link>
             )}
           </section>
@@ -75,7 +140,8 @@ export default async function TeacherPage() {
             </div>
           </section>
         </>
-      )}
+        );
+      }}
     </SupabaseDataPage>
   );
 }

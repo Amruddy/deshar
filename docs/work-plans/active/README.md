@@ -4,19 +4,19 @@
 
 Текущий активный технический план:
 
-`39-stitch-ui-ux-transfer-plan.md`
+не выбран.
 
 Последний завершенный stage:
 
-`../completed/38-post-registration-performance-plan.md`
+`../completed/39-stitch-ui-ux-transfer-plan.md`
 
 Следующий ожидаемый stage:
 
-`Release Stage 11. Stitch UI/UX Transfer`.
+требует выбора и оформления отдельным work plan.
 
 Первый блок активного stage:
 
-перенос UI/UX-направления Google Stitch в реальные страницы Deshar без изменения бизнес-логики.
+не выбран.
 
 Codex перед разработкой должен читать:
 

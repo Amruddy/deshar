@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DataTable, InfoList, MetricGrid, SupabaseDataPage } from "@/app/components/supabase-data-page";
+import { DataTable, InfoList, SupabaseDataPage } from "@/app/components/supabase-data-page";
 import { getTeacherGroupDetail } from "@/app/lib/data/supabase-read";
 import { requireWorkspace } from "@/app/lib/dev-auth";
 
@@ -45,10 +45,10 @@ export default async function TeacherGroupPage({ params }: TeacherGroupPageProps
                   </p>
                   <div className="button-row">
                     <Link className="button compact-button" href={`/teacher/lessons/${data.nextLesson.id}`}>
-                      Открыть ближайший урок
+                      Ближайший урок
                     </Link>
                     <Link className="secondary-button compact-button" href={`/teacher/groups/${data.id}/journal`}>
-                      Открыть журнал
+                      Журнал
                     </Link>
                   </div>
                 </div>
@@ -59,7 +59,7 @@ export default async function TeacherGroupPage({ params }: TeacherGroupPageProps
                   <p>Администратор еще не создал занятия по расписанию этой группы.</p>
                   <div className="button-row">
                     <Link className="secondary-button compact-button" href={`/teacher/groups/${data.id}/journal`}>
-                      Открыть журнал
+                      Журнал
                     </Link>
                   </div>
                 </div>
@@ -91,10 +91,6 @@ export default async function TeacherGroupPage({ params }: TeacherGroupPageProps
               )}
             </aside>
           </section>
-
-          <div className="section">
-            <MetricGrid items={data.metrics} />
-          </div>
 
           <section className="grid section">
             <div className="panel">
@@ -181,7 +177,7 @@ export default async function TeacherGroupPage({ params }: TeacherGroupPageProps
                     header: "Действие",
                     render: (student) => (
                       <Link className="secondary-button compact-button" href={`/teacher/students/${student.id}`}>
-                        Открыть ученика
+                        Ученик
                       </Link>
                     ),
                   },

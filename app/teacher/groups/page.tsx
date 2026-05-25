@@ -38,14 +38,14 @@ export default async function TeacherGroupsPage() {
                 render: (group) => (
                   <div className="button-row">
                     <Link className="button compact-button" href={`/teacher/groups/${group.id}/journal`}>
-                      Открыть журнал
+                      Журнал
                     </Link>
                     <Link className="secondary-button compact-button" href={`/teacher/groups/${group.id}`}>
-                      Открыть группу
+                      Группа
                     </Link>
                     {group.nextLessonId ? (
                       <Link className="secondary-button compact-button" href={`/teacher/lessons/${group.nextLessonId}`}>
-                        Открыть ближайший урок
+                        Ближайший урок
                       </Link>
                     ) : null}
                   </div>

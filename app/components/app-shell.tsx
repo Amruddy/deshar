@@ -97,6 +97,9 @@ function Sidebar({ items, session }: { items: NavItem[]; session: AppSession | n
         {session ? (
           <>
             <strong>{session.name}</strong>
+            <p>{workspaceConfig[session.activeWorkspace].label}</p>
+            <p>{session.organizationName}</p>
+            <p className="sidebar-user-email">{session.email}</p>
             <div className="sidebar-card-actions">
               <Link className="secondary-button compact-button" href="/profile">
                 Профиль

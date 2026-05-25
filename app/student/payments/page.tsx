@@ -14,16 +14,6 @@ export default async function StudentPaymentsPage() {
     >
       {(data) => (
         <div className="student-dashboard">
-          <section className="student-compact-grid">
-            {data.metrics.map((metric) => (
-              <article className="panel student-compact-card" key={metric.label}>
-                <h2>{metric.label}</h2>
-                <strong>{metric.value}</strong>
-                {metric.detail ? <p>{metric.detail}</p> : null}
-              </article>
-            ))}
-          </section>
-
           {data.payments.length > 0 ? (
             <section className="student-detail-list">
               {data.payments.map((payment) => (

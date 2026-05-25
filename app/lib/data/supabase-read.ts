@@ -514,6 +514,7 @@ export type TeacherOverviewData = {
   metrics: MetricItem[];
   upcomingLessons: LessonSummary[];
   attentionPayments: PaymentSummary[];
+  problemSignals: ProblemSignal[];
   journalShortcut: {
     detail: string;
     href: string;
@@ -1818,6 +1819,113 @@ function summarizePayments(
   }));
 }
 
+type AttendanceSignal = {
+  groupId: string;
+  groupName: string;
+  id: string;
+  lessonCount: number;
+  percentValue: number;
+  presentCount: number;
+  studentId: string;
+  studentName: string;
+};
+
+const attendanceLowThreshold = 80;
+
+function buildLowAttendanceSignals(
+  memberships: GroupStudentRow[],
+  lessons: LessonRow[],
+  journalEntries: JournalEntryRow[],
+  students: Map<string, StudentRow>,
+  groups: Map<string, GroupRow>,
+) {
+  const activeMemberships = memberships.filter((item) => item.status === "active");
+  const journalEntryMap = new Map(journalEntries.map((entry) => [journalKey(entry.lesson_id, entry.student_id), entry]));
+  const lessonsByGroupId = new Map<string, LessonRow[]>();
+
+  for (const lesson of lessons) {
+    if (!lesson.group_id) {
+      continue;
+    }
+
+    const items = lessonsByGroupId.get(lesson.group_id) ?? [];
+    items.push(lesson);
+    lessonsByGroupId.set(lesson.group_id, items);
+  }
+
+  return activeMemberships
+    .map((membership): AttendanceSignal | null => {
+      const groupLessons = lessonsByGroupId.get(membership.group_id) ?? [];
+      let presentCount = 0;
+      let absentCount = 0;
+      let excusedCount = 0;
+      let recordedCount = 0;
+
+      for (const lesson of groupLessons) {
+        const entry = journalEntryMap.get(journalKey(lesson.id, membership.student_id));
+
+        if (entry) {
+          recordedCount += 1;
+        }
+
+        const mark = normalizeAttendanceMark(entry?.attendance_mark ?? null);
+
+        if (mark === "absent") {
+          absentCount += 1;
+          continue;
+        }
+
+        if (mark === "excused") {
+          excusedCount += 1;
+          continue;
+        }
+
+        if (mark === "present" || Boolean(entry?.lesson_mark) || Boolean(entry)) {
+          presentCount += 1;
+        }
+      }
+
+      const lessonCount = groupLessons.length;
+      const percentValue = lessonCount > 0 && recordedCount > 0 ? Math.round((presentCount / lessonCount) * 100) : null;
+
+      if (percentValue === null || percentValue >= attendanceLowThreshold) {
+        return null;
+      }
+
+      const group = groups.get(membership.group_id);
+      const student = students.get(membership.student_id);
+
+      return {
+        groupId: membership.group_id,
+        groupName: group?.name ?? "Группа",
+        id: `${membership.group_id}:${membership.student_id}`,
+        lessonCount,
+        percentValue,
+        presentCount,
+        studentId: membership.student_id,
+        studentName: student?.name ?? "Ученик",
+      };
+    })
+    .filter((item): item is AttendanceSignal => item !== null)
+    .sort((left, right) => left.percentValue - right.percentValue || left.presentCount - right.presentCount);
+}
+
+function attendanceProblemSignals(attendanceSignals: AttendanceSignal[]) {
+  return attendanceSignals.map((signal) => ({
+    detail: `${signal.studentName}; ${signal.groupName}; ${signal.percentValue}%, присутствий: ${signal.presentCount} из ${signal.lessonCount}.`,
+    label: "Слабая посещаемость",
+    tone: signal.percentValue < 60 ? "danger" : "warning",
+  })) satisfies ProblemSignal[];
+}
+
+function paymentProblemSignals(payments: PaymentSummary[]) {
+  return payments.map((payment) => ({
+    detail: `${payment.studentName}; ${payment.amount}; срок ${payment.due}; ${payment.status}.`,
+    label: "Оплата",
+    tone: "danger",
+  })) satisfies ProblemSignal[];
+}
+
 function summarizeScheduleRules(scheduleRules: ScheduleRuleRow[]) {
   return scheduleRules
     .slice()
@@ -2751,7 +2859,10 @@ export async function getTeacherOverview(organizationId: string, email: string) 
     const teacherGroups = rows<GroupRow>(teacherGroupsResult, "Группы преподавателя");
     const groupIds = teacherGroups.map((group) => group.id);
     const courseIds = Array.from(new Set(teacherGroups.map((group) => group.course_id)));
-    const [coursesResult, groupStudentsResult, lessonsResult] = await Promise.all([
+    const currentMonth = normalizeMonthValue(undefined);
+    const nextMonth = addMonthValue(currentMonth, 1);
+    const now = new Date();
+    const [coursesResult, groupStudentsResult, lessonsResult, attendanceLessonsResult] = await Promise.all([
       courseIds.length > 0
         ? client
             .from("courses")
@@ -2772,13 +2883,27 @@ export async function getTeacherOverview(organizationId: string, email: string) 
             .order("starts_at", { ascending: true })
             .limit(5)
         : Promise.resolve({ data: [], error: null }),
+      groupIds.length > 0
+        ? client
+            .from("lessons")
+            .select("id,course_id,group_id,teacher_id,starts_at,ends_at,topic")
+            .eq("organization_id", organizationId)
+            .in("group_id", groupIds)
+            .gte("starts_at", monthBoundaryIso(currentMonth))
+            .lt("starts_at", monthBoundaryIso(nextMonth))
+            .order("starts_at", { ascending: true })
+        : Promise.resolve({ data: [], error: null }),
     ]);
     const courses = rows<CourseRow>(coursesResult, "Курсы преподавателя");
     const groupStudents = rows<GroupStudentRow>(groupStudentsResult, "Состав групп преподавателя");
     const lessons = rows<LessonRow>(lessonsResult, "Занятия преподавателя");
+    const attendanceLessons = rows<LessonRow>(attendanceLessonsResult, "Занятия посещаемости преподавателя").filter(
+      (lesson) => new Date(lesson.starts_at).getTime() <= now.getTime(),
+    );
+    const attendanceLessonIds = attendanceLessons.map((lesson) => lesson.id);
     const studentIds = new Set(groupStudents.filter((item) => item.status === "active").map((item) => item.student_id));
     const activeStudentIds = Array.from(studentIds);
-    const [studentsResult, paymentsResult] = await Promise.all([
+    const [studentsResult, paymentsResult, journalResult] = await Promise.all([
       activeStudentIds.length > 0
         ? client.from("students").select("id,user_id,name,phone,email,status").eq("organization_id", organizationId).in("id", activeStudentIds)
         : Promise.resolve({ data: [], error: null }),
@@ -2790,9 +2915,18 @@ export async function getTeacherOverview(organizationId: string, email: string) 
             .in("student_id", activeStudentIds)
             .in("status", ["pending", "overdue"])
         : Promise.resolve({ data: [], error: null }),
+      attendanceLessonIds.length > 0
+        ? client
+            .from("journal_entries")
+            .select("id,lesson_id,student_id,attendance_mark,lesson_mark,teacher_comment,internal_comment,is_visible_to_student")
+            .in("lesson_id", attendanceLessonIds)
+        : Promise.resolve({ data: [], error: null }),
     ]);
     const students = rows<StudentRow>(studentsResult, "Ученики преподавателя");
     const payments = rows<PaymentRow>(paymentsResult, "Оплата учеников преподавателя");
+    const journalEntries = rows<JournalEntryRow>(journalResult, "Записи посещаемости преподавателя").filter((entry) =>
+      studentIds.has(entry.student_id),
+    );
     const studentMap = byId(students.filter((student) => studentIds.has(student.id)));
     const courseMap = byId(courses);
     const groupMap = byId(teacherGroups);
@@ -2804,6 +2938,12 @@ export async function getTeacherOverview(organizationId: string, email: string) 
       .filter((payment) => studentIds.has(payment.student_id))
       .filter(isPaymentAttention)
       .slice(0, 5);
+    const attentionPaymentSummaries = summarizePayments(attentionPayments, studentMap, courseMap, groupMap);
+    const lowAttendanceSignals = buildLowAttendanceSignals(groupStudents, attendanceLessons, journalEntries, studentMap, groupMap).slice(0, 3);
+    const problemSignals: ProblemSignal[] = [
+      ...attendanceProblemSignals(lowAttendanceSignals),
+      ...paymentProblemSignals(attentionPaymentSummaries.slice(0, 3)),
+    ];
 
     return {
       teacherName: teacher.name,
@@ -2814,7 +2954,8 @@ export async function getTeacherOverview(organizationId: string, email: string) 
         { label: "Оплата к вниманию", value: String(attentionPayments.length) },
       ],
       upcomingLessons: summarizeLessons(lessons, courseMap, groupMap),
-      attentionPayments: summarizePayments(attentionPayments, studentMap, courseMap, groupMap),
+      attentionPayments: attentionPaymentSummaries,
+      problemSignals,
       journalShortcut: primaryJournalGroup
         ? {
             detail: `${courseMap.get(primaryJournalGroup.course_id)?.name ?? "Курс"}; учеников: ${primaryJournalGroupStudents}`,
@@ -3133,8 +3274,20 @@ export async function getTeacherGroupDetail(organizationId: string, email: strin
       throw new Error("Группа: запись не найдена.");
     }
 
-    const now = new Date().toISOString();
-    const [groupStudentsResult, scheduleRulesResult, upcomingLessonsResult, recentLessonsResult, homeworkResult, materialsResult, paymentsResult] =
+    const nowDate = new Date();
+    const now = nowDate.toISOString();
+    const currentMonth = normalizeMonthValue(undefined);
+    const nextMonth = addMonthValue(currentMonth, 1);
+    const [
+      groupStudentsResult,
+      scheduleRulesResult,
+      upcomingLessonsResult,
+      recentLessonsResult,
+      attendanceLessonsResult,
+      homeworkResult,
+      materialsResult,
+      paymentsResult,
+    ] =
       await Promise.all([
         client.from("group_students").select("id,group_id,student_id,status").eq("group_id", groupId),
         client
@@ -3163,6 +3316,14 @@ export async function getTeacherGroupDetail(organizationId: string, email: strin
           .order("starts_at", { ascending: false })
           .limit(5),
         client
+          .from("lessons")
+          .select("id,course_id,group_id,teacher_id,starts_at,ends_at,topic")
+          .eq("organization_id", organizationId)
+          .eq("group_id", groupId)
+          .gte("starts_at", monthBoundaryIso(currentMonth))
+          .lt("starts_at", monthBoundaryIso(nextMonth))
+          .order("starts_at", { ascending: true }),
+        client
           .from("homework")
           .select("id,course_id,group_id,student_id,title,description,due_at,status")
           .eq("organization_id", organizationId)
@@ -3185,6 +3346,9 @@ export async function getTeacherGroupDetail(organizationId: string, email: strin
     const scheduleRules = rows<ScheduleRuleRow>(scheduleRulesResult, "Расписание группы преподавателя");
     const upcomingLessons = rows<LessonRow>(upcomingLessonsResult, "Ближайшие занятия группы преподавателя");
     const recentLessons = rows<LessonRow>(recentLessonsResult, "Последние занятия группы преподавателя");
+    const attendanceLessons = rows<LessonRow>(attendanceLessonsResult, "Занятия посещаемости группы преподавателя").filter(
+      (lesson) => new Date(lesson.starts_at).getTime() <= nowDate.getTime(),
+    );
     const homework = rows<HomeworkRow>(homeworkResult, "Домашние задания группы преподавателя");
     const materials = rows<MaterialRow>(materialsResult, "Материалы группы преподавателя");
     const payments = rows<PaymentRow>(paymentsResult, "Оплата группы преподавателя");
@@ -3194,12 +3358,30 @@ export async function getTeacherGroupDetail(organizationId: string, email: strin
     const userMap = byId(users);
     const activeGroupStudents = groupStudents.filter((item) => item.status === "active");
     const activeStudentIds = new Set(activeGroupStudents.map((item) => item.student_id));
+    const attendanceLessonIds = attendanceLessons.map((lesson) => lesson.id);
+    const journalResult =
+      attendanceLessonIds.length > 0
+        ? await client
+            .from("journal_entries")
+            .select("id,lesson_id,student_id,attendance_mark,lesson_mark,teacher_comment,internal_comment,is_visible_to_student")
+            .in("lesson_id", attendanceLessonIds)
+        : { data: [], error: null };
+    const journalEntries = rows<JournalEntryRow>(journalResult, "Записи посещаемости группы преподавателя").filter((entry) =>
+      activeStudentIds.has(entry.student_id),
+    );
     const groupPayments = payments.filter(
       (payment) =>
         activeStudentIds.has(payment.student_id) &&
         (payment.group_id === group.id || payment.course_id === group.course_id),
     );
     const attentionPayments = groupPayments.filter(isPaymentAttention);
+    const lowAttendanceSignals = buildLowAttendanceSignals(
+      activeGroupStudents,
+      attendanceLessons,
+      journalEntries,
+      studentMap,
+      groupMap,
+    ).slice(0, 3);
     const nextLesson = summarizeLessons(upcomingLessons.slice(0, 1), courseMap, groupMap)[0] ?? null;
     const visibleHomework = homework
       .filter((item) => item.group_id === group.id)
@@ -3242,6 +3424,7 @@ export async function getTeacherGroupDetail(organizationId: string, email: strin
             tone: "warning",
           }
         : null,
+      ...attendanceProblemSignals(lowAttendanceSignals),
       attentionPayments.length > 0
         ? {
             detail: `Есть записи оплаты, которым нужно внимание: ${attentionPayments.length}.`,

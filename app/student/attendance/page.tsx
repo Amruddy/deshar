@@ -15,37 +15,25 @@ export default async function StudentAttendancePage() {
       {(data) => (
         <div className="student-dashboard">
           {data.attendance.length > 0 ? (
-            <>
-              <section className="student-compact-grid">
-                {data.metrics.map((metric) => (
-                  <article className="panel student-compact-card" key={metric.label}>
-                    <h2>{metric.label}</h2>
-                    <strong>{metric.value}</strong>
-                    {metric.detail ? <p>{metric.detail}</p> : null}
-                  </article>
-                ))}
-              </section>
-
-              <section className="student-detail-list">
-                {data.attendance.map((item) => (
-                  <article className="panel student-detail-card" key={item.id}>
-                    <div className="student-attendance-row">
-                      <span className="student-card-meta">
-                        {item.date}; {item.timeRange}
-                      </span>
-                      <span className="student-attendance-mark" data-status={item.status}>
-                        {item.mark}
-                      </span>
-                    </div>
-                    <strong>{item.lesson}</strong>
-                    <p>
-                      {item.course}; {item.group}
-                    </p>
-                    {item.teacherComment ? <p>Комментарий: {item.teacherComment}</p> : null}
-                  </article>
-                ))}
-              </section>
-            </>
+            <section className="student-detail-list">
+              {data.attendance.map((item) => (
+                <article className="panel student-detail-card" key={item.id}>
+                  <div className="student-attendance-row">
+                    <span className="student-card-meta">
+                      {item.date}; {item.timeRange}
+                    </span>
+                    <span className="student-attendance-mark" data-status={item.status}>
+                      {item.mark}
+                    </span>
+                  </div>
+                  <strong>{item.lesson}</strong>
+                  <p>
+                    {item.course}; {item.group}
+                  </p>
+                  {item.teacherComment ? <p>Комментарий: {item.teacherComment}</p> : null}
+                </article>
+              ))}
+            </section>
           ) : (
             <section className="panel student-compact-card student-attendance-empty">
               <h2>Отметок пока нет</h2>

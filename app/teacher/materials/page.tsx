@@ -1,4 +1,4 @@
-import { DataTable, MetricGrid, SupabaseDataPage } from "@/app/components/supabase-data-page";
+import { DataTable, SupabaseDataPage } from "@/app/components/supabase-data-page";
 import { getTeacherMaterials } from "@/app/lib/data/supabase-read";
 import { requireWorkspace } from "@/app/lib/dev-auth";
 import { createTeacherMaterial, updateMaterialStatus } from "@/app/teacher/actions";
@@ -26,8 +26,6 @@ export default async function TeacherMaterialsPage() {
     >
       {(data) => (
         <>
-          <MetricGrid items={data.metrics} />
-
           <section className="panel section">
             <div className="section-heading">
               <div>

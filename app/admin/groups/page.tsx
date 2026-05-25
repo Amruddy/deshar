@@ -148,7 +148,7 @@ export default async function AdminGroupsPage({ searchParams }: AdminGroupsPageP
                 header: "Действие",
                 render: (group) => (
                   <Link className="secondary-button compact-button" href={`/admin/groups/${group.id}`}>
-                    Открыть группу
+                    Группа
                   </Link>
                 ),
               },
