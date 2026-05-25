@@ -320,18 +320,40 @@ invite-only правил и security boundaries.
 - изменение схемы данных;
 - performance-оптимизации после переноса интерфейса.
 
-## 5. Текущий активный stage
+### Release Stage 12. Post-Stitch Runtime Performance
 
-Текущий кодовый stage:
+Статус:
 
-`Release Stage 12. Post-Stitch Runtime Performance`.
+завершен, PR #67.
 
 План:
 
-`docs/work-plans/active/40-post-stitch-runtime-performance-plan.md`
+`docs/work-plans/completed/40-post-stitch-runtime-performance-plan.md`
 
 Цель:
 
 измерить baseline после завершенного Stitch UI/UX Transfer и ускорить самые
 заметные runtime/Supabase bottlenecks без нового redesign и без изменения
 product-scope.
+
+Результат:
+
+- baseline и итоговые замеры зафиксированы в
+  `docs/release/release-1-post-stitch-performance.md`;
+- ускорены ключевые маршруты преподавателя и ученика, включая журнал группы,
+  обзор преподавателя, список групп, посещаемость и ученические страницы;
+- оставшиеся hotspots описаны в release report для будущих performance stages.
+
+## 5. Текущий активный stage
+
+Текущий кодовый stage не выбран.
+
+Последний завершенный stage:
+
+`Release Stage 12. Post-Stitch Runtime Performance`, PR #67.
+
+План:
+
+`docs/work-plans/completed/40-post-stitch-runtime-performance-plan.md`
+
+Перед следующим кодовым stage нужно выбрать или создать новый active work-plan.

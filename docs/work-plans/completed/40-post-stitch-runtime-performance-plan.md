@@ -2,7 +2,7 @@
 
 ## 0. Статус
 
-- Статус плана: активный план, кодовая реализация начинается после baseline.
+- Статус плана: завершен, PR #67.
 - Большой блок: `Release 1.0`.
 - Stage релиза: `Release Stage 12. Post-Stitch Runtime Performance`.
 - Рабочая ветка: `feat/runtime-performance-after-stitch`.

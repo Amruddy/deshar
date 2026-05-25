@@ -27,10 +27,10 @@
 ## 1. Текущий статус
 
 - Текущий большой блок: `Release 1.0`.
-- Последний завершенный кодовый stage: `Release Stage 11. Stitch UI/UX Transfer`, PR #66.
-- Активный stage: `Release Stage 12. Post-Stitch Runtime Performance`.
-- Активный план: `docs/work-plans/active/40-post-stitch-runtime-performance-plan.md`.
-- Следующий stage: зависит от результатов post-Stitch performance baseline.
+- Последний завершенный кодовый stage: `Release Stage 12. Post-Stitch Runtime Performance`, PR #67.
+- Активный stage: не выбран.
+- Активный план: не выбран.
+- Следующий stage: нужно выбрать отдельным work-plan на основе результатов post-Stitch performance baseline.
 - Предыдущий блок: `MPMF 1.0`, завершен и смержен в `main`.
 - Запись завершения MPMF 1.0: `docs/release/mpmf-1-release-readiness.md`.
 - Запись завершения Production Hardening: `docs/release/release-1-production-hardening.md`.
@@ -98,18 +98,21 @@ design/performance stages и не смешиваться с правками м�
 
 ## 5. Активный подплан
 
-Активный подплан выбран:
+Активный подплан не выбран.
+
+Последний завершенный подплан:
 
 `Release Stage 12. Post-Stitch Runtime Performance`
 
 План:
 
-`docs/work-plans/active/40-post-stitch-runtime-performance-plan.md`
+`docs/work-plans/completed/40-post-stitch-runtime-performance-plan.md`
 
-Задача:
+Результат:
 
-измерить baseline после Stitch UI/UX Transfer и ускорить самые заметные
-runtime/Supabase bottlenecks без нового redesign и без изменения product-scope.
+baseline после Stitch UI/UX Transfer измерен, самые заметные runtime/Supabase
+bottlenecks ускорены без нового redesign и без изменения product-scope. Следующий
+stage должен быть выбран отдельным active work-plan.
 
 ## 6. Stages Release 1.0
 
@@ -124,5 +127,5 @@ runtime/Supabase bottlenecks без нового redesign и без измене
 9. `Release Stage 9. Public Registration And Solo Teacher` - завершен, PR #62.
 10. `Release Stage 10. Post-registration Performance` - завершен, PR #63.
 11. `Release Stage 11. Stitch UI/UX Transfer` - завершен, PR #66.
-12. `Release Stage 12. Post-Stitch Runtime Performance` - активен, план
-    `docs/work-plans/active/40-post-stitch-runtime-performance-plan.md`.
+12. `Release Stage 12. Post-Stitch Runtime Performance` - завершен, PR #67, план
+    `docs/work-plans/completed/40-post-stitch-runtime-performance-plan.md`.
